@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis, LineChart, Line, ReferenceLine } from 'recharts';
 
-const API = 'https://cnat-backend-1.onrender.com/api';
-const CLAUDE_KEY = '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';
+const API = (process.env.REACT_APP_API_URL || 'https://cnat-backend-1.onrender.com') + '/api';
+const CLAUDE_KEY = process.env.REACT_APP_CLAUDE_KEY || '';
 const sevColor = s => s==='critical'?'#ef4444':s==='warning'?'#f59e0b':s==='moderate'?'#fb923c':'#64748b';
 const thrColor = a => a==='ALARMA'?'#ef4444':a==='ALERTA'?'#f59e0b':a==='INFORMACION'?'#3b82f6':'#22c55e';
 const COLORS = ['#3b82f6','#ef4444','#f59e0b','#22c55e','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
@@ -225,17 +225,28 @@ function TideGaugeMap() {
     };
   };
 
-  // Estaciones peruanas prioritarias con codigos IOC verificados
+  // Estaciones peruanas — codigos IOC verificados con datos en tiempo real (18-abr-2026)
   const PERU_STATIONS = [
-    { code: 'call2', name: 'Callao', country: 'PER', lat: -12.07, lon: -77.17, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
-    { code: 'IsHor', name: 'Isla Hormiga, Lima', country: 'PER', lat: -11.98, lon: -77.73, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
-    { code: 'chim1', name: 'Chimbote', country: 'PER', lat: -9.08, lon: -78.61, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
-    { code: 'pait', name: 'Paita', country: 'PER', lat: -5.08, lon: -81.11, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
-    { code: 'talr', name: 'Talara', country: 'PER', lat: -4.58, lon: -81.28, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
-    { code: 'mata', name: 'Matarani', country: 'PER', lat: -17.00, lon: -72.11, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
-    { code: 'sanjn', name: 'San Juan', country: 'PER', lat: -15.36, lon: -75.16, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
-    { code: 'pdas', name: 'Pisco / San Andres', country: 'PER', lat: -13.72, lon: -76.22, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
-    { code: 'ilo1', name: 'Ilo', country: 'PER', lat: -17.64, lon: -71.34, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    // NORTE
+    { code: 'tala2', name: 'Talara',            country: 'PER', lat: -4.58,  lon: -81.28, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'paita', name: 'Paita',             country: 'PER', lat: -5.08,  lon: -81.11, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'bayo',  name: 'Bayovar',           country: 'PER', lat: -5.79,  lon: -81.01, status: 'offline', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'lobos', name: 'Lobos de Afuera',   country: 'PER', lat: -6.94,  lon: -80.71, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'salav', name: 'Salaverry',         country: 'PER', lat: -8.23,  lon: -78.98, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'chimb', name: 'Chimbote',          country: 'PER', lat: -9.08,  lon: -78.61, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'huarm', name: 'Huarmey',           country: 'PER', lat: -10.07, lon: -78.15, status: 'offline', sensor_type: 'prs', operator: 'DHN Peru' },
+    // CENTRO
+    { code: 'chan',  name: 'Chancay',           country: 'PER', lat: -11.59, lon: -77.27, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'IsHor', name: 'Isla Hormiga',      country: 'PER', lat: -11.96, lon: -77.34, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'call',  name: 'Callao',            country: 'PER', lat: -12.07, lon: -77.17, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'huach', name: 'Huacho',            country: 'PER', lat: -11.12, lon: -77.61, status: 'offline', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'cazul', name: 'Cerro Azul',        country: 'PER', lat: -13.03, lon: -76.48, status: 'offline', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'pdas',  name: 'Pisco / San Andres',country: 'PER', lat: -13.72, lon: -76.22, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'sjuan', name: 'San Juan',          country: 'PER', lat: -15.36, lon: -75.16, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'chala', name: 'Chala',             country: 'PER', lat: -15.87, lon: -74.23, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    // SUR
+    { code: 'mata',  name: 'Matarani',          country: 'PER', lat: -17.00, lon: -72.11, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'ilom',  name: 'Ilo',               country: 'PER', lat: -17.64, lon: -71.34, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
   ];
 
   // Mezclar estaciones: priorizar Peru (con nombres correctos), luego el resto
@@ -375,17 +386,29 @@ function TideGaugeMap() {
 
       const icon = L.divIcon({
         className: '',
-        html: `<div style="
-          width:${isSel ? 16 : 10}px;
-          height:${isSel ? 16 : 10}px;
-          background:${color};
-          border:2px solid ${isSel ? '#fbbf24' : '#fff'};
-          border-radius:${isOnline ? '50%' : '2px'};
-          box-shadow:0 0 ${isSel ? '12' : '6'}px ${color};
-          transition: all 0.3s;
-        "></div>`,
-        iconSize: [isSel ? 16 : 10, isSel ? 16 : 10],
-        iconAnchor: [isSel ? 8 : 5, isSel ? 8 : 5],
+        html: `<div style="display:flex;align-items:center;gap:4px;white-space:nowrap;">
+          <div style="
+            width:${isSel ? 14 : 10}px;
+            height:${isSel ? 14 : 10}px;
+            flex-shrink:0;
+            background:${color};
+            border:2px solid ${isSel ? '#fbbf24' : '#fff'};
+            border-radius:${isOnline ? '50%' : '2px'};
+            box-shadow:0 0 ${isSel ? 12 : 6}px ${color};
+          "></div>
+          <span style="
+            font-family:'JetBrains Mono',monospace;
+            font-size:9px;
+            font-weight:${isSel ? 700 : 400};
+            color:${isSel ? '#fbbf24' : '#cbd5e1'};
+            background:rgba(5,11,24,0.78);
+            padding:1px 3px;
+            border-radius:2px;
+            pointer-events:none;
+          ">${s.name}</span>
+        </div>`,
+        iconSize: [10, 14],
+        iconAnchor: [5, 7],
       });
 
       const marker = L.marker([s.lat, s.lon], { icon }).addTo(map);
@@ -736,7 +759,7 @@ export default function App() {
       </div>
 
       <div style={{ display: 'flex', padding: '0 20px', background: '#070e1f', borderBottom: '2px solid #1e3a5f', overflowX: 'auto' }}>
-        {tabs.map(t => <button key={t} onClick={() => setTab(t)} style={{ padding: '12px 18px', background: tab === t ? '#1e3a5f' : 'transparent', border: 'none', borderBottom: tab === t ? `3px solid ${tabColors[t] || '#f59e0b'}` : '3px solid transparent', color: tab === t ? (tabColors[t] || '#fbbf24') : '#f59e0b77', cursor: 'pointer', fontSize: 12, fontWeight: 700, letterSpacing: 2, fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+        {tabs.map(t => <button key={t} onClick={() => setTab(t)} style={{ padding: '14px 20px', background: tab === t ? '#1e3a5f' : 'transparent', border: 'none', borderBottom: tab === t ? `3px solid ${tabColors[t] || '#f59e0b'}` : '3px solid transparent', color: tab === t ? (tabColors[t] || '#fbbf24') : '#e2e8f0', cursor: 'pointer', fontSize: 15, fontWeight: 700, letterSpacing: 2, fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
           {t === 'aria' ? 'ARIA (IA)' : t === 'analytics' ? 'ANALYTICS' : t === 'mareografo' ? 'MAREOGRAFO' : t.toUpperCase()}
           {t === 'alertas' && al.length > 0 && <span style={{ background: '#ef4444', color: '#fff', borderRadius: 10, padding: '2px 8px', fontSize: 11, fontWeight: 700, marginLeft: 8 }}>{al.length}</span>}
         </button>)}
