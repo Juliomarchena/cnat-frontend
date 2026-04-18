@@ -2,5 +2,9 @@
   "buildCommand": "npm run build",
   "outputDirectory": "build",
   "installCommand": "npm install --legacy-peer-deps",
+  "env": {
+    "DISABLE_ESLINT_PLUGIN": "true",
+    "GENERATE_SOURCEMAP": "false"
+  },
   "rewrites": [{"source": "/(.*)", "destination": "/index.html"}]
 }
