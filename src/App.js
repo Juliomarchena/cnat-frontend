@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis, LineChart, Line, ReferenceLine } from 'recharts';
 
 const API = 'https://cnat-backend-1.onrender.com/api';
-const CLAUDE_KEY = process.env.REACT_APP_CLAUDE_KEY || '';
+const CLAUDE_KEY = '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';
 const sevColor = s => s==='critical'?'#ef4444':s==='warning'?'#f59e0b':s==='moderate'?'#fb923c':'#64748b';
 const thrColor = a => a==='ALARMA'?'#ef4444':a==='ALERTA'?'#f59e0b':a==='INFORMACION'?'#3b82f6':'#22c55e';
 const COLORS = ['#3b82f6','#ef4444','#f59e0b','#22c55e','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
@@ -225,6 +225,41 @@ function TideGaugeMap() {
     };
   };
 
+  // Estaciones peruanas prioritarias con codigos IOC verificados
+  const PERU_STATIONS = [
+    { code: 'call2', name: 'Callao', country: 'PER', lat: -12.07, lon: -77.17, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'IsHor', name: 'Isla Hormiga, Lima', country: 'PER', lat: -11.98, lon: -77.73, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'chim1', name: 'Chimbote', country: 'PER', lat: -9.08, lon: -78.61, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'pait', name: 'Paita', country: 'PER', lat: -5.08, lon: -81.11, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'talr', name: 'Talara', country: 'PER', lat: -4.58, lon: -81.28, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'mata', name: 'Matarani', country: 'PER', lat: -17.00, lon: -72.11, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'sanjn', name: 'San Juan', country: 'PER', lat: -15.36, lon: -75.16, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'pdas', name: 'Pisco / San Andres', country: 'PER', lat: -13.72, lon: -76.22, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+    { code: 'ilo1', name: 'Ilo', country: 'PER', lat: -17.64, lon: -71.34, status: 'online', sensor_type: 'prs', operator: 'DHN Peru' },
+  ];
+
+  // Mezclar estaciones: priorizar Peru (con nombres correctos), luego el resto
+  const mergeWithPeru = (stations) => {
+    const peruCodesLower = new Set(PERU_STATIONS.map(s => s.code.toLowerCase()));
+
+    // Para cada estacion del backend, verificar si es una estacion peruana
+    // por codigo (case-insensitive) O por proximidad de coordenadas
+    const isPeruStation = (s) => {
+      if (peruCodesLower.has((s.code || '').toLowerCase())) return true;
+      // Tambien verificar por coordenadas cercanas (dentro de 0.15 grados)
+      if (s.country === 'PER' || s.country === 'Peru') {
+        return PERU_STATIONS.some(p =>
+          Math.abs(p.lat - s.lat) < 0.15 && Math.abs(p.lon - s.lon) < 0.15
+        );
+      }
+      return false;
+    };
+
+    const filtered = stations.filter(s => !isPeruStation(s));
+    // Peru primero (con nombres garantizados), luego el resto
+    return [...PERU_STATIONS, ...filtered];
+  };
+
   // Cargar estaciones
   useEffect(() => {
     const load = async () => {
@@ -239,10 +274,10 @@ function TideGaugeMap() {
             .map(mapStationFields)
             .filter(s => s.code && s.lat && s.lon);
 
-          console.log(`[CNAT] Backend: ${d.stations.length} raw -> ${mapped.length} con codigo valido`);
-          if (mapped.length > 0) console.log('[CNAT] Ejemplo estacion:', JSON.stringify(mapped[0]));
-          setStations(mapped);
-          setDebugInfo(`${mapped.length} estaciones (backend v2)`);
+          const final = mergeWithPeru(mapped);
+          console.log(`[CNAT] Backend: ${d.stations.length} raw -> ${mapped.length} validas + ${PERU_STATIONS.length} Peru = ${final.length}`);
+          setStations(final);
+          setDebugInfo(`${final.length} estaciones (${PERU_STATIONS.length} Peru prioritarias)`);
           setLoadingStations(false);
           return;
         }
@@ -256,7 +291,6 @@ function TideGaugeMap() {
         console.log(`[CNAT] IOC v1: ${allStations.length} estaciones totales`);
         if (allStations.length > 0) {
           console.log('[CNAT] Campos IOC v1:', Object.keys(allStations[0]));
-          console.log('[CNAT] Primera estacion raw:', JSON.stringify(allStations[0]).substring(0, 300));
         }
 
         const pacific = allStations
@@ -267,11 +301,11 @@ function TideGaugeMap() {
             return isInPacific(s.lat, s.lon);
           });
 
-        console.log(`[CNAT] IOC v1 Pacifico: ${pacific.length} estaciones con codigo valido`);
-        if (pacific.length > 0) console.log('[CNAT] Ejemplo mapeada:', JSON.stringify(pacific[0]));
+        const final = mergeWithPeru(pacific);
+        console.log(`[CNAT] IOC v1: ${pacific.length} Pacifico + ${PERU_STATIONS.length} Peru = ${final.length}`);
 
-        setStations(pacific);
-        setDebugInfo(`${pacific.length} estaciones (IOC v1 directo)`);
+        setStations(final);
+        setDebugInfo(`${final.length} estaciones (${PERU_STATIONS.length} Peru prioritarias)`);
       } catch (e) {
         console.error('[CNAT] Error cargando estaciones:', e);
         setDebugInfo(`Error: ${e.message}`);
