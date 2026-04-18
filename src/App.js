@@ -201,13 +201,22 @@ function TideGaugeMap() {
     const lat = parseFloat(s.lat || s.Lat || s.latitude || 0);
     const lon = parseFloat(s.lon || s.Lon || s.longitude || 0);
 
+    // Determinar status: si api_status es "Operational" -> online
+    // Si tiene last_value reciente -> online
+    // Por defecto -> online (la mayoria de estaciones IOC estan activas)
+    const apiStatus = s.api_status || s.status || '';
+    let status = 'online';
+    if (apiStatus === 'offline' || apiStatus === 'Closed') {
+      status = 'offline';
+    }
+
     return {
       code: String(code).trim(),
       name: String(name).trim(),
       country: String(country).trim(),
       lat,
       lon,
-      status: s.status || 'online',
+      status,
       sensor_type: s.sensor_type || s.sensor || '',
       performance: s.performance || '',
       operator: s.operator || s.localoperator || '',
@@ -395,13 +404,30 @@ function TideGaugeMap() {
       console.log(`[CNAT] Backend respondio: code=${d.code} | ${d.data?.length || 0} puntos`);
 
       if (d.data && d.data.length > 0) {
+        // Calcular mediana para centrar la curva (como UNESCO: signal - median)
+        const rawValues = d.data.map(p => p.value).filter(v => v != null);
+        const sorted = [...rawValues].sort((a, b) => a - b);
+        const median = sorted.length % 2 === 0
+          ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2
+          : sorted[Math.floor(sorted.length / 2)];
+
         const processed = d.data.map(p => ({
           ...p,
+          value: parseFloat((p.value - median).toFixed(4)),
           time: new Date(p.timestamp).toLocaleTimeString('es-PE', { hour: '2-digit', minute: '2-digit' }),
         }));
         setTideData(processed);
-        setStats(d.stats || null);
-        console.log(`[CNAT] OK ${processed.length} puntos cargados desde backend`);
+        // Stats sobre datos relativos
+        const relValues = processed.map(p => p.value);
+        setStats({
+          min: Math.min(...relValues).toFixed(3),
+          max: Math.max(...relValues).toFixed(3),
+          mean: (relValues.reduce((a, b) => a + b, 0) / relValues.length).toFixed(3),
+          range: (Math.max(...relValues) - Math.min(...relValues)).toFixed(3),
+          points: relValues.length,
+          median_abs: median.toFixed(3),
+        });
+        console.log(`[CNAT] OK ${processed.length} puntos cargados (mediana=${median.toFixed(3)})`);
       } else {
         // Paso 2: Si backend vacio, intentar IOC v1 directo (puede fallar por CORS)
         console.log('[CNAT] Backend sin datos, intentando IOC v1 directo...');
