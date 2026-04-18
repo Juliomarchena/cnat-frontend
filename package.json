@@ -23,5 +23,11 @@
     "development": [
       "last 1 chrome version"
     ]
+  },
+  "devDependencies": {
+    "eslint": "^10.2.1"
+  },
+  "engines": {
+    "node": "18.x"
   }
 }
