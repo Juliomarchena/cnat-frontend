@@ -159,7 +159,7 @@ function PacificMap({ earthquakes = [], buoys = [], focusedEqId = null }) {
       </div>
       <svg viewBox={views[viewIdx].vb} style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg,#0a1628,#0d1f3c,#0a1628)', transition: 'all 0.5s ease' }}>
         <defs><radialGradient id="gr" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" /><stop offset="100%" stopColor="#ef4444" stopOpacity="0" /></radialGradient><radialGradient id="gy" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" /><stop offset="100%" stopColor="#f59e0b" stopOpacity="0" /></radialGradient></defs>
-        {landPaths.map(p => <path key={p.key} d={p.d} fill="#0d2040" stroke="#1e3a5f" strokeWidth="0.4" />)}
+        {landPaths.map(p => <path key={p.key} d={p.d} fill="#0d2847" stroke="#2d6a9f" strokeWidth="0.8" />)}
         {[-60, -30, 0, 30, 60].map(l => <line key={l} x1={0} y1={toY(l)} x2={900} y2={toY(l)} stroke="#1e3a5f" strokeWidth="0.5" strokeDasharray="4,4" />)}
         {[-150, -120, -90, -60, 90, 120, 150, 180].map(l => <line key={`lo${l}`} x1={toX(l)} y1={0} x2={toX(l)} y2={500} stroke="#1e3a5f" strokeWidth="0.5" strokeDasharray="4,4" />)}
         <path d="M 255,195 L 250,210 248,230 245,250 242,270 240,290 238,310 236,330 234,340 236,350 240,360 245,370" stroke="#f59e0b" strokeWidth="2.5" fill="none" opacity="0.5" />
