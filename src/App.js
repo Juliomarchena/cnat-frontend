@@ -75,7 +75,7 @@ Alertas: ${(data.alerts||[]).length > 0 ? data.alerts[0].title : 'Sin alertas'}`
 }
 
 /* ═══ STATS PANEL ═══ */
-function StatsSummary({ earthquakes=[], alerts=[], buoys=[] }) {
+function StatsSummary({ earthquakes=[], alerts=[], buoys=[], onFocus }) {
   const mags=earthquakes.map(e=>e.magnitude).filter(Boolean); const depths=earthquakes.map(e=>e.depth_km).filter(Boolean);
   const magMax=mags.length?Math.max(...mags):0, magAvg=mags.length?(mags.reduce((a,b)=>a+b,0)/mags.length):0;
   const depthAvg=depths.length?(depths.reduce((a,b)=>a+b,0)/depths.length):0, depthMax=depths.length?Math.max(...depths):0;
@@ -86,8 +86,8 @@ function StatsSummary({ earthquakes=[], alerts=[], buoys=[] }) {
   return (
     <div style={{ padding: 12, borderBottom: '1px solid #1e3a5f' }}>
       <div style={{ fontSize: 11, color: '#fbbf24', letterSpacing: 2, fontWeight: 700, marginBottom: 8 }}>RESUMEN NUMERICO</div>
-      {lastSig && <div style={{ background: '#0d1a2e', borderRadius: 8, padding: 10, marginBottom: 8, borderLeft: `4px solid ${sevColor(lastSig.severity)}` }}>
-        <div style={{ fontSize: 9, color: '#fbbf24', fontWeight: 700, marginBottom: 3 }}>ULTIMO SIGNIFICATIVO</div>
+      {lastSig && <div onClick={() => onFocus && onFocus(lastSig.id)} style={{ background: '#0d1a2e', borderRadius: 8, padding: 10, marginBottom: 8, borderLeft: `4px solid ${sevColor(lastSig.severity)}`, cursor: 'pointer', transition: 'background 0.2s' }} title="Ver en mapa" onMouseOver={e => e.currentTarget.style.background='#1e3a5f33'} onMouseOut={e => e.currentTarget.style.background='#0d1a2e'}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div style={{ fontSize: 9, color: '#fbbf24', fontWeight: 700, marginBottom: 3 }}>ULTIMO SIGNIFICATIVO</div><span style={{ fontSize: 8, color: '#475569' }}>▶ ver en mapa</span></div>
         <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}><span style={{ fontSize: 18, fontWeight: 700, color: sevColor(lastSig.severity), fontFamily: "'Orbitron'" }}>M{lastSig.magnitude}</span><span style={{ fontSize: 10, color: '#94a3b8' }}>hace {timeSince(lastSig.event_time)}</span></div>
         <div style={{ fontSize: 10, color: '#cbd5e1', marginTop: 2 }}>{lastSig.place}</div>
       </div>}
@@ -128,7 +128,7 @@ function AnalyticsDashboard({ earthquakes = [], buoys = [], sources = [], data =
 }
 
 /* ═══ PACIFIC MAP ═══ */
-function PacificMap({ earthquakes = [], buoys = [] }) {
+function PacificMap({ earthquakes = [], buoys = [], focusedEqId = null }) {
   const views = [{ name: 'GLOBAL', vb: '0 0 900 500' }, { name: 'PERU', vb: '180 180 200 200' }, { name: 'PACIFICO SUR', vb: '150 250 400 250' }, { name: 'ASIA-PACIFICO', vb: '550 100 350 300' }];
   const [viewIdx, setViewIdx] = useState(0);
   const toX = lng => ((lng + 180) / 360) * 900, toY = lat => ((90 - lat) / 180) * 500;
@@ -144,7 +144,7 @@ function PacificMap({ earthquakes = [], buoys = [] }) {
         <path d="M 255,195 L 250,210 248,230 245,250 242,270 240,290 238,310 236,330 234,340 236,350 240,360 245,370" stroke="#f59e0b" strokeWidth="2.5" fill="none" opacity="0.5" />
         <text x={238} y={238} fill="#f59e0b" fontSize="10" fontWeight="bold" opacity="0.8">PERU</text>
         {buoys.map(b => { const bx = toX(b.longitude), by = toY(b.latitude), c = b.status === 'alert' ? '#ef4444' : b.status === 'warning' ? '#f59e0b' : '#22c55e'; return <g key={b.id}>{b.status !== 'normal' && <circle cx={bx} cy={by} r={16} fill={b.status === 'alert' ? "url(#gr)" : "url(#gy)"}><animate attributeName="r" values="12;20;12" dur="1.5s" repeatCount="indefinite" /></circle>}<circle cx={bx} cy={by} r={5} fill={c} stroke="#fff" strokeWidth="1.5" /><text x={bx + 8} y={by + 4} fill="#fbbf24" fontSize="7" fontFamily="monospace" fontWeight="bold">{b.name?.replace('DART ', '').substring(0, 12)}</text></g>; })}
-        {earthquakes.slice(0, 30).map((eq, i) => { const ex = toX(eq.longitude), ey = toY(eq.latitude), r = Math.max(3, (eq.magnitude || 0) * 2), c = sevColor(eq.severity), d = eq.severity === 'critical' || eq.severity === 'warning'; return <g key={eq.id} opacity={1 - i * 0.02}>{eq.severity === 'critical' && <circle cx={ex} cy={ey} r={r * 4} fill="url(#gr)"><animate attributeName="r" values={`${r * 3};${r * 6};${r * 3}`} dur="1s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.8;0.2;0.8" dur="1s" repeatCount="indefinite" /></circle>}{eq.severity === 'warning' && <circle cx={ex} cy={ey} r={r * 3} fill="url(#gy)"><animate attributeName="r" values={`${r * 2};${r * 4};${r * 2}`} dur="1.5s" repeatCount="indefinite" /></circle>}<circle cx={ex} cy={ey} r={r} fill={c} opacity="0.8">{d && <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite" />}</circle>{eq.magnitude >= 4.5 && <text x={ex + r + 3} y={ey + 3} fill={c} fontSize="8" fontWeight="bold" fontFamily="monospace">M{eq.magnitude}</text>}</g>; })}
+        {earthquakes.slice(0, 30).map((eq, i) => { const ex = toX(eq.longitude), ey = toY(eq.latitude), r = Math.max(3, (eq.magnitude || 0) * 2), c = sevColor(eq.severity), d = eq.severity === 'critical' || eq.severity === 'warning', focused = eq.id === focusedEqId; return <g key={eq.id} opacity={1 - i * 0.02}>{eq.severity === 'critical' && <circle cx={ex} cy={ey} r={r * 4} fill="url(#gr)"><animate attributeName="r" values={`${r * 3};${r * 6};${r * 3}`} dur="1s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.8;0.2;0.8" dur="1s" repeatCount="indefinite" /></circle>}{eq.severity === 'warning' && <circle cx={ex} cy={ey} r={r * 3} fill="url(#gy)"><animate attributeName="r" values={`${r * 2};${r * 4};${r * 2}`} dur="1.5s" repeatCount="indefinite" /></circle>}{focused && <circle cx={ex} cy={ey} r={r * 5} fill="none" stroke="#ffffff" strokeWidth="1.5" opacity="0.9"><animate attributeName="r" values={`${r * 4};${r * 7};${r * 4}`} dur="0.8s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.9;0.2;0.9" dur="0.8s" repeatCount="indefinite" /></circle>}<circle cx={ex} cy={ey} r={r} fill={c} opacity="0.8">{d && <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite" />}</circle>{(eq.magnitude >= 4.5 || focused) && <text x={ex + r + 3} y={ey + 3} fill={focused ? '#ffffff' : c} fontSize={focused ? '10' : '8'} fontWeight="bold" fontFamily="monospace">M{eq.magnitude}</text>}</g>; })}
         {viewIdx === 0 && <text x={450} y={22} fill="#fbbf24" fontSize="12" fontWeight="bold" textAnchor="middle" fontFamily="monospace">MONITOREO SISMICO - DATOS EN VIVO</text>}
       </svg>
     </div>
@@ -884,7 +884,8 @@ function UsersTab() {
 export default function App() {
   const { session, userProfile, role, isAdmin, logout } = useAuth();
   const [data, setData] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(null);
-  const [tab, setTab] = useState('mapa'); const [now, setNow] = useState(new Date());
+  const [tab, setTab] = useState('mapa'); const [now, setNow] = useState(new Date()); const [focusedEqId, setFocusedEqId] = useState(null);
+  const focusEq = (id) => { setFocusedEqId(id); setTab('mapa'); };
   const playAlarm = useAlarmSound(); const prevC = useRef(0);
   const fetchData = useCallback(async () => { try { const r = await fetch(`${API}/dashboard`); const d = await r.json(); setData(d); setError(null); if (d.kpis?.critical_count > 0 && d.kpis.critical_count > prevC.current) playAlarm(); prevC.current = d.kpis?.critical_count || 0; } catch (e) { setError(e.message); } finally { setLoading(false); } }, [playAlarm]);
   useEffect(() => { if (session) { fetchData(); const i = setInterval(fetchData, 30000); return () => clearInterval(i); } }, [fetchData, session]);
@@ -937,7 +938,7 @@ export default function App() {
 
       <div style={{ display: 'grid', gridTemplateColumns: tab === 'mareografo' ? '1fr' : '1fr 380px', gap: 0, height: 'calc(100vh - 220px)' }}>
         <div style={{ padding: tab === 'mareografo' ? 0 : 12, overflow: 'auto', height: '100%' }}>
-          {tab === 'mapa' && <div style={{ display: 'flex', flexDirection: 'column', gap: 0, height: '100%' }}><div style={{ flex: 1, borderRadius: 10, overflow: 'hidden', border: '2px solid #1e3a5f', minHeight: 280 }}><PacificMap earthquakes={eq} buoys={bu} /></div><MapLegend /><div style={{ height: 220 }}><AnalyticsDashboard earthquakes={eq} buoys={bu} sources={sr} data={data} /></div></div>}
+          {tab === 'mapa' && <div style={{ display: 'flex', flexDirection: 'column', gap: 0, height: '100%' }}><div style={{ flex: 1, borderRadius: 10, overflow: 'hidden', border: '2px solid #1e3a5f', minHeight: 280 }}><PacificMap earthquakes={eq} buoys={bu} focusedEqId={focusedEqId} /></div><MapLegend /><div style={{ height: 220 }}><AnalyticsDashboard earthquakes={eq} buoys={bu} sources={sr} data={data} /></div></div>}
           {tab === 'analytics' && <AnalyticsDashboard earthquakes={eq} buoys={bu} sources={sr} data={data} />}
           {tab === 'alertas' && <div><h3 style={{ fontSize: 14, color: '#fbbf24', letterSpacing: 2, marginBottom: 10 }}>ALERTAS TSUNAMI</h3>{al.length === 0 ? <p style={{ color: '#94a3b8', padding: 40, textAlign: 'center' }}>Sin alertas</p> : al.map(a => <div key={a.id} style={{ borderLeft: `4px solid ${a.severity === 'critical' ? '#ef4444' : '#f59e0b'}`, borderRadius: 8, padding: 14, marginBottom: 8, background: '#0d1a2e' }}><div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}><span style={{ fontSize: 13, fontWeight: 700, color: a.severity === 'critical' ? '#ef4444' : '#f59e0b' }}>{a.alert_type}</span><span style={{ fontSize: 11, color: '#94a3b8' }}>{new Date(a.issued_at).toLocaleString('es-PE')}</span></div><p style={{ fontSize: 13, color: '#e2e8f0' }}>{a.title}</p></div>)}</div>}
           {tab === 'mareografo' && <TideGaugeMap />}
@@ -951,10 +952,10 @@ export default function App() {
         {/* RIGHT SIDEBAR - only show when not in mareografo tab */}
         {tab !== 'mareografo' && (
           <div style={{ background: '#070e1f', borderLeft: '1px solid #1e3a5f', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-            <StatsSummary earthquakes={eq} alerts={al} buoys={bu} />
+            <StatsSummary earthquakes={eq} alerts={al} buoys={bu} onFocus={focusEq} />
             <div style={{ flex: 1, overflow: 'auto', padding: 12 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}><h3 style={{ fontSize: 12, color: '#fbbf24', letterSpacing: 2, fontWeight: 700 }}>FEED SISMICO</h3><div style={{ width: 8, height: 8, borderRadius: '50%', background: '#22c55e', animation: 'blink 2s infinite' }} /></div>
-              {eq.slice(0, 15).map(e => { const c = sevColor(e.severity); return <div key={e.id} style={{ padding: '7px 10px', borderRadius: 6, marginBottom: 4, borderLeft: `4px solid ${c}`, background: '#0d1a2e44' }}><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 14, fontWeight: 700, color: c, fontFamily: "'Orbitron'" }}>M{e.magnitude}</span><span style={{ fontSize: 9, color: '#94a3b8' }}>{new Date(e.event_time).toLocaleTimeString('es-PE')}</span></div><div style={{ fontSize: 10, color: '#cbd5e1', marginTop: 2 }}>{e.place}</div><div style={{ display: 'flex', gap: 8, marginTop: 2 }}><span style={{ fontSize: 9, color: '#94a3b8' }}>Prof:{e.depth_km}km</span><span style={{ fontSize: 9, color: '#94a3b8' }}>{e.source_id?.toUpperCase()}</span></div></div> })}
+              {eq.slice(0, 15).map(e => { const c = sevColor(e.severity); const isFocused = e.id === focusedEqId; return <div key={e.id} onClick={() => focusEq(e.id)} style={{ padding: '7px 10px', borderRadius: 6, marginBottom: 4, borderLeft: `4px solid ${c}`, background: isFocused ? '#1e3a5f44' : '#0d1a2e44', cursor: 'pointer', outline: isFocused ? `1px solid ${c}` : 'none', transition: 'background 0.2s' }} title="Ver en mapa"><div style={{ display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 14, fontWeight: 700, color: c, fontFamily: "'Orbitron'" }}>M{e.magnitude}</span><span style={{ fontSize: 9, color: '#94a3b8' }}>{new Date(e.event_time).toLocaleTimeString('es-PE')}</span></div><div style={{ fontSize: 10, color: '#cbd5e1', marginTop: 2 }}>{e.place}</div><div style={{ display: 'flex', gap: 8, marginTop: 2 }}><span style={{ fontSize: 9, color: '#94a3b8' }}>Prof:{e.depth_km}km</span><span style={{ fontSize: 9, color: '#94a3b8' }}>{e.source_id?.toUpperCase()}</span></div></div> })}
             </div>
             <div style={{ borderTop: '1px solid #1e3a5f', padding: '8px 12px', display: 'flex', justifyContent: 'space-between' }}><span style={{ fontSize: 10, color: '#f59e0b', fontWeight: 700 }}>MICROHELP v2.0</span><span style={{ fontSize: 10, color: '#22c55e', fontWeight: 700 }}>DATOS REALES</span></div>
           </div>
