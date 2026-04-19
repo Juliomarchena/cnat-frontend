@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis, LineChart, Line, ReferenceLine } from 'recharts';
+import { supabase } from './supabaseClient';
 
 const API = (process.env.REACT_APP_API_URL || 'https://cnat-backend-1.onrender.com') + '/api';
 const CLAUDE_KEY = process.env.REACT_APP_CLAUDE_KEY || '';
@@ -728,21 +729,180 @@ function AriaAssistant({data}){const[messages,setMessages]=useState([]);const[in
   return<div style={{display:'flex',flexDirection:'column',height:'100%'}}><div style={{padding:16,borderBottom:'2px solid #8b5cf6',background:'#0a1628'}}><div style={{display:'flex',alignItems:'center',gap:10}}><div style={{width:40,height:40,borderRadius:'50%',background:'linear-gradient(135deg,#8b5cf6,#6366f1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,color:'#fff',fontWeight:700}}>A</div><div><div style={{fontSize:18,fontWeight:700,color:'#fbbf24',fontFamily:"'Orbitron'"}}>ARIA</div><div style={{fontSize:11,color:'#a78bfa'}}>Asistente IA - CNAT</div></div></div></div>{messages.length===0&&<div style={{padding:14}}><div style={{fontSize:11,color:'#fbbf24',letterSpacing:1.5,marginBottom:10,fontWeight:700}}>CONSULTAS RAPIDAS</div>{prompts.map((p,i)=><button key={i} onClick={()=>send(p)} style={{display:'block',width:'100%',textAlign:'left',padding:'10px 14px',marginBottom:6,background:'#0d1a2e',border:'1px solid #1e3a5f66',borderRadius:8,color:'#cbd5e1',fontSize:12,cursor:'pointer',fontFamily:'inherit'}} onMouseOver={e=>{e.target.style.background='#1e3a5f44';e.target.style.color='#fbbf24'}} onMouseOut={e=>{e.target.style.background='#0d1a2e';e.target.style.color='#cbd5e1'}}>▸ {p}</button>)}</div>}<div style={{flex:1,overflow:'auto',padding:14}}>{messages.map((m,i)=><div key={i} style={{marginBottom:14,padding:14,borderRadius:8,background:m.role==='user'?'#1e3a5f22':'#0d1a2e',borderLeft:m.role==='user'?'4px solid #f59e0b':'4px solid #8b5cf6'}}><div style={{fontSize:11,color:m.role==='user'?'#fbbf24':'#a78bfa',fontWeight:700,marginBottom:8}}>{m.role==='user'?'OPERADOR':'ARIA'}</div><div style={{fontSize:13,color:'#e2e8f0',lineHeight:1.8,whiteSpace:'pre-wrap'}}>{m.content}</div></div>)}{loading&&<div style={{padding:14,borderRadius:8,background:'#0d1a2e',borderLeft:'4px solid #8b5cf6'}}><div style={{fontSize:13,color:'#a78bfa'}}>Analizando...</div></div>}</div><div style={{padding:14,borderTop:'2px solid #1e3a5f',display:'flex',gap:8}}><input value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==='Enter'&&!loading&&send(input)} placeholder="Consulta a ARIA..." disabled={loading} style={{flex:1,padding:'12px 16px',borderRadius:8,border:'2px solid #1e3a5f',background:'#0a1628',color:'#fbbf24',fontSize:13,fontFamily:'inherit',outline:'none'}}/><button onClick={()=>send(input)} disabled={loading||!input.trim()} style={{padding:'12px 24px',borderRadius:8,border:'none',background:loading?'#334155':'#6366f1',color:'#fff',fontSize:13,fontWeight:700,cursor:loading?'not-allowed':'pointer',fontFamily:'inherit'}}>{loading?'...':'ENVIAR'}</button></div></div>;
 }
 
+/* ═══ LOGIN SCREEN ═══ */
+function LoginScreen({ onLogin }) {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const handleLogin = async (e) => {
+    e.preventDefault();
+    setLoading(true); setError('');
+    const { error: err } = await supabase.auth.signInWithPassword({ email, password });
+    if (err) setError(err.message === 'Invalid login credentials' ? 'Credenciales incorrectas' : err.message);
+    else onLogin();
+    setLoading(false);
+  };
+
+  return (
+    <div style={{ minHeight: '100vh', background: '#050b18', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: "'JetBrains Mono', monospace" }}>
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
+      <div style={{ width: 420, background: '#0a1628', border: '1px solid #1e3a5f', borderRadius: 12, overflow: 'hidden', boxShadow: '0 0 60px rgba(59,130,246,0.1)' }}>
+        {/* Header */}
+        <div style={{ background: 'linear-gradient(90deg,#0a1628,#0d2847,#0a1628)', borderBottom: '2px solid #f59e0b', padding: '24px 32px', textAlign: 'center' }}>
+          <div style={{ width: 56, height: 56, borderRadius: 10, background: 'linear-gradient(135deg,#1e40af,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 26, fontWeight: 'bold', color: '#fff', margin: '0 auto 12px', boxShadow: '0 0 20px rgba(59,130,246,0.4)' }}>C</div>
+          <div style={{ fontFamily: "'Orbitron', monospace", fontSize: 22, fontWeight: 700, color: '#f59e0b', letterSpacing: 4 }}>CNAT</div>
+          <div style={{ fontSize: 10, color: '#fbbf24', letterSpacing: 2, marginTop: 4 }}>CENTRO NACIONAL DE ALERTA DE TSUNAMIS</div>
+          <div style={{ fontSize: 9, color: '#475569', marginTop: 6, letterSpacing: 1 }}>DIRECCIÓN DE HIDROGRAFÍA Y NAVEGACIÓN — MGP</div>
+        </div>
+        {/* Form */}
+        <form onSubmit={handleLogin} style={{ padding: '32px' }}>
+          <div style={{ fontSize: 11, color: '#fbbf24', letterSpacing: 2, fontWeight: 700, marginBottom: 20, textAlign: 'center' }}>ACCESO AUTORIZADO</div>
+          <div style={{ marginBottom: 16 }}>
+            <label style={{ fontSize: 10, color: '#94a3b8', letterSpacing: 1, display: 'block', marginBottom: 6 }}>CORREO INSTITUCIONAL</label>
+            <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus
+              style={{ width: '100%', padding: '12px 14px', background: '#060c1a', border: '1px solid #1e3a5f', borderRadius: 6, color: '#e2e8f0', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+              placeholder="usuario@dhn.mil.pe" />
+          </div>
+          <div style={{ marginBottom: 24 }}>
+            <label style={{ fontSize: 10, color: '#94a3b8', letterSpacing: 1, display: 'block', marginBottom: 6 }}>CONTRASEÑA</label>
+            <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
+              style={{ width: '100%', padding: '12px 14px', background: '#060c1a', border: '1px solid #1e3a5f', borderRadius: 6, color: '#e2e8f0', fontSize: 13, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box' }}
+              placeholder="••••••••" />
+          </div>
+          {error && <div style={{ background: '#7f1d1d', border: '1px solid #ef4444', borderRadius: 6, padding: '10px 14px', fontSize: 12, color: '#fca5a5', marginBottom: 16 }}>⚠ {error}</div>}
+          <button type="submit" disabled={loading} style={{ width: '100%', padding: '14px', background: loading ? '#334155' : 'linear-gradient(90deg,#1e40af,#3b82f6)', border: 'none', borderRadius: 6, color: '#fff', fontSize: 13, fontWeight: 700, letterSpacing: 2, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+            {loading ? 'VERIFICANDO...' : 'INGRESAR AL SISTEMA'}
+          </button>
+          <div style={{ marginTop: 20, padding: '10px', background: '#0d1a2e', borderRadius: 6, border: '1px solid #1e3a5f33' }}>
+            <div style={{ fontSize: 9, color: '#475569', textAlign: 'center', letterSpacing: 1 }}>SISTEMA RESTRINGIDO — SOLO PERSONAL AUTORIZADO</div>
+            <div style={{ fontSize: 9, color: '#334155', textAlign: 'center', marginTop: 4 }}>Todo acceso queda registrado</div>
+          </div>
+        </form>
+        <div style={{ borderTop: '1px solid #1e3a5f22', padding: '10px 32px', display: 'flex', justifyContent: 'space-between' }}>
+          <span style={{ fontSize: 8, color: '#334155' }}>CNAT v2.0</span>
+          <span style={{ fontSize: 8, color: '#334155' }}>MICROHELP © 2026</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ═══ HOOK AUTH ═══ */
+function useAuth() {
+  const [session, setSession] = useState(undefined); // undefined = cargando
+  const [userProfile, setUserProfile] = useState(null);
+
+  const fetchProfile = useCallback(async (userId) => {
+    const { data } = await supabase.from('cnat_users').select('*').eq('id', userId).single();
+    setUserProfile(data);
+  }, []);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      if (s?.user) fetchProfile(s.user.id);
+    });
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      if (s?.user) fetchProfile(s.user.id);
+      else setUserProfile(null);
+    });
+    return () => subscription.unsubscribe();
+  }, [fetchProfile]);
+
+  const logout = async () => { await supabase.auth.signOut(); };
+  const role = userProfile?.role || 'readonly';
+  const isAdmin = role === 'admin';
+  const canEdit = role === 'admin' || role === 'operador';
+
+  return { session, userProfile, role, isAdmin, canEdit, logout };
+}
+
+/* ═══ TAB USUARIOS (solo admin) ═══ */
+function UsersTab() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [editingId, setEditingId] = useState(null);
+  const ROLES = ['admin', 'operador', 'readonly'];
+  const roleColor = r => r === 'admin' ? '#ef4444' : r === 'operador' ? '#3b82f6' : '#64748b';
+
+  useEffect(() => {
+    supabase.from('cnat_users').select('*').order('created_at').then(({ data }) => { setUsers(data || []); setLoading(false); });
+  }, []);
+
+  const updateRole = async (id, role) => {
+    await supabase.from('cnat_users').update({ role }).eq('id', id);
+    setUsers(u => u.map(x => x.id === id ? { ...x, role } : x));
+    setEditingId(null);
+  };
+
+  const toggleActive = async (id, active) => {
+    await supabase.from('cnat_users').update({ active: !active }).eq('id', id);
+    setUsers(u => u.map(x => x.id === id ? { ...x, active: !active } : x));
+  };
+
+  if (loading) return <div style={{ color: '#94a3b8', padding: 40, textAlign: 'center' }}>Cargando usuarios...</div>;
+
+  return (
+    <div>
+      <h3 style={{ fontSize: 14, color: '#fbbf24', letterSpacing: 2, marginBottom: 16 }}>GESTIÓN DE USUARIOS</h3>
+      <div style={{ borderRadius: 10, overflow: 'hidden', border: '1px solid #1e3a5f' }}>
+        <table style={{ width: '100%', borderCollapse: 'collapse', background: '#0d1a2e' }}>
+          <thead><tr style={{ background: '#0a1628' }}>
+            {['Usuario', 'Correo', 'Rol', 'Último acceso', 'Estado', 'Acción'].map(h => <th key={h} style={{ padding: '10px 14px', fontSize: 10, fontWeight: 700, color: '#fbbf24', textAlign: 'left', borderBottom: '1px solid #1e3a5f', letterSpacing: 1 }}>{h}</th>)}
+          </tr></thead>
+          <tbody>
+            {users.map(u => <tr key={u.id} style={{ borderBottom: '1px solid #1e3a5f22' }}>
+              <td style={{ padding: '10px 14px', fontSize: 13, color: '#e2e8f0', fontWeight: 600 }}>{u.full_name}</td>
+              <td style={{ padding: '10px 14px', fontSize: 11, color: '#94a3b8' }}>{u.email}</td>
+              <td style={{ padding: '10px 14px' }}>
+                {editingId === u.id
+                  ? <select defaultValue={u.role} onChange={e => updateRole(u.id, e.target.value)} style={{ background: '#0a1628', border: '1px solid #1e3a5f', color: '#e2e8f0', padding: '4px 8px', borderRadius: 4, fontSize: 11, fontFamily: 'inherit' }}>
+                      {ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+                    </select>
+                  : <span style={{ padding: '3px 10px', borderRadius: 4, background: `${roleColor(u.role)}20`, color: roleColor(u.role), fontSize: 11, fontWeight: 700 }}>{u.role}</span>}
+              </td>
+              <td style={{ padding: '10px 14px', fontSize: 10, color: '#64748b' }}>{u.last_login ? new Date(u.last_login).toLocaleString('es-PE') : 'Nunca'}</td>
+              <td style={{ padding: '10px 14px' }}><span style={{ color: u.active ? '#22c55e' : '#ef4444', fontSize: 11, fontWeight: 700 }}>{u.active ? 'ACTIVO' : 'INACTIVO'}</span></td>
+              <td style={{ padding: '10px 14px', display: 'flex', gap: 6 }}>
+                <button onClick={() => setEditingId(editingId === u.id ? null : u.id)} style={{ padding: '4px 10px', background: '#1e3a5f', border: 'none', borderRadius: 4, color: '#fbbf24', fontSize: 10, cursor: 'pointer', fontFamily: 'inherit' }}>ROL</button>
+                <button onClick={() => toggleActive(u.id, u.active)} style={{ padding: '4px 10px', background: u.active ? '#7f1d1d' : '#14532d', border: 'none', borderRadius: 4, color: u.active ? '#fca5a5' : '#86efac', fontSize: 10, cursor: 'pointer', fontFamily: 'inherit' }}>{u.active ? 'DESACTIVAR' : 'ACTIVAR'}</button>
+              </td>
+            </tr>)}
+          </tbody>
+        </table>
+      </div>
+      <div style={{ marginTop: 12, fontSize: 10, color: '#475569' }}>Para crear nuevos usuarios: Supabase Dashboard → Authentication → Users → Add User</div>
+    </div>
+  );
+}
+
 /* ═══ MAIN APP ═══ */
 export default function App() {
+  const { session, userProfile, role, isAdmin, logout } = useAuth();
   const [data, setData] = useState(null); const [loading, setLoading] = useState(true); const [error, setError] = useState(null);
   const [tab, setTab] = useState('mapa'); const [now, setNow] = useState(new Date());
   const playAlarm = useAlarmSound(); const prevC = useRef(0);
   const fetchData = useCallback(async () => { try { const r = await fetch(`${API}/dashboard`); const d = await r.json(); setData(d); setError(null); if (d.kpis?.critical_count > 0 && d.kpis.critical_count > prevC.current) playAlarm(); prevC.current = d.kpis?.critical_count || 0; } catch (e) { setError(e.message); } finally { setLoading(false); } }, [playAlarm]);
-  useEffect(() => { fetchData(); const i = setInterval(fetchData, 30000); return () => clearInterval(i); }, [fetchData]);
+  useEffect(() => { if (session) { fetchData(); const i = setInterval(fetchData, 30000); return () => clearInterval(i); } }, [fetchData, session]);
   useEffect(() => { const i = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(i); }, []);
+
+  // Verificando sesión (undefined = aún cargando)
+  if (session === undefined) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: 20, background: '#050b18' }}><style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style><div style={{ width: 50, height: 50, border: '3px solid #1e3a5f', borderTop: '3px solid #f59e0b', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /><div style={{ color: '#fbbf24', fontSize: 14, letterSpacing: 2, fontFamily: "'JetBrains Mono'" }}>VERIFICANDO ACCESO...</div></div>;
+
+  // Sin sesión → Login
+  if (!session) return <LoginScreen onLogin={() => {}} />;
+
   if (loading) return <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100vh', flexDirection: 'column', gap: 20, background: '#050b18' }}><style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}`}</style><div style={{ width: 50, height: 50, border: '3px solid #1e3a5f', borderTop: '3px solid #f59e0b', borderRadius: '50%', animation: 'spin 1s linear infinite' }} /><div style={{ color: '#fbbf24', fontSize: 14, letterSpacing: 2, fontFamily: "'JetBrains Mono'" }}>CONECTANDO...</div></div>;
 
   const k = data?.kpis || {}, eq = data?.earthquakes || [], al = data?.alerts || [], bu = data?.buoys || [], sr = data?.sources || [], th = data?.thresholds || [];
   const isA = k.critical_count > 0, rC = k.risk_level === 'ALTO' ? '#ef4444' : k.risk_level === 'MEDIO' ? '#f59e0b' : '#22c55e';
+  const roleColor = role === 'admin' ? '#ef4444' : role === 'operador' ? '#3b82f6' : '#64748b';
 
-  const tabs = ['mapa', 'analytics', 'alertas', 'mareografo', 'boyas', 'fuentes', 'umbrales', 'aria'];
-  const tabColors = { aria: '#8b5cf6', analytics: '#06b6d4', mareografo: '#06b6d4' };
+  const tabs = ['mapa', 'analytics', 'alertas', 'mareografo', 'boyas', 'fuentes', 'umbrales', 'aria', ...(isAdmin ? ['usuarios'] : [])];
+  const tabColors = { aria: '#8b5cf6', analytics: '#06b6d4', mareografo: '#06b6d4', usuarios: '#ef4444' };
 
   return (
     <div style={{ background: '#050b18', color: '#e2e8f0', minHeight: '100vh', fontFamily: "'JetBrains Mono',monospace" }}>
@@ -751,7 +911,16 @@ export default function App() {
 
       <header style={{ background: 'linear-gradient(90deg,#0a1628,#0d2847,#0a1628)', borderBottom: '2px solid #f59e0b', padding: '12px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}><div style={{ width: 46, height: 46, borderRadius: 8, background: 'linear-gradient(135deg,#1e40af,#3b82f6)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, fontWeight: 'bold', color: '#fff', boxShadow: '0 0 20px rgba(59,130,246,0.3)' }}>C</div><div><h1 style={{ fontFamily: "'Orbitron'", fontSize: 20, fontWeight: 700, letterSpacing: 3, color: '#f59e0b', margin: 0 }}>CNAT</h1><p style={{ fontSize: 10, color: '#fbbf24', letterSpacing: 1.5, margin: 0 }}>CENTRO NACIONAL DE ALERTA DE TSUNAMIS</p></div><div style={{ padding: '6px 14px', borderRadius: 4, background: isA ? '#7f1d1d' : '#0f2a1a', border: `2px solid ${isA ? '#ef4444' : '#22c55e'}`, display: 'flex', alignItems: 'center', gap: 6 }}><div style={{ width: 10, height: 10, borderRadius: '50%', background: isA ? '#ef4444' : '#22c55e' }} /><span style={{ fontSize: 12, fontWeight: 700, color: isA ? '#fca5a5' : '#86efac' }}>{isA ? 'ALERTA' : 'OPERATIVO'}</span></div></div>
-        <div style={{ textAlign: 'right' }}><div style={{ fontFamily: "'Orbitron'", fontSize: 22, fontWeight: 700, color: '#f59e0b' }}>{now.toLocaleTimeString('es-PE')}</div><div style={{ fontSize: 11, color: '#fbbf24' }}>{now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div></div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: 11, color: '#94a3b8' }}>{userProfile?.full_name || session?.user?.email}</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, justifyContent: 'flex-end', marginTop: 2 }}>
+              <span style={{ fontSize: 9, padding: '2px 8px', borderRadius: 3, background: `${roleColor}22`, color: roleColor, fontWeight: 700, letterSpacing: 1 }}>{role?.toUpperCase()}</span>
+              <button onClick={logout} style={{ fontSize: 9, padding: '2px 8px', background: '#1e3a5f', border: '1px solid #334155', borderRadius: 3, color: '#94a3b8', cursor: 'pointer', fontFamily: 'inherit', letterSpacing: 1 }}>SALIR</button>
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}><div style={{ fontFamily: "'Orbitron'", fontSize: 22, fontWeight: 700, color: '#f59e0b' }}>{now.toLocaleTimeString('es-PE')}</div><div style={{ fontSize: 11, color: '#fbbf24' }}>{now.toLocaleDateString('es-PE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div></div>
+        </div>
       </header>
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6,1fr)', gap: 8, padding: '10px 20px', background: '#070e1f' }}>
@@ -760,7 +929,7 @@ export default function App() {
 
       <div style={{ display: 'flex', padding: '0 20px', background: '#070e1f', borderBottom: '2px solid #1e3a5f', overflowX: 'auto' }}>
         {tabs.map(t => <button key={t} onClick={() => setTab(t)} style={{ padding: '14px 20px', background: tab === t ? '#1e3a5f' : 'transparent', border: 'none', borderBottom: tab === t ? `3px solid ${tabColors[t] || '#f59e0b'}` : '3px solid transparent', color: tab === t ? (tabColors[t] || '#fbbf24') : '#e2e8f0', cursor: 'pointer', fontSize: 15, fontWeight: 700, letterSpacing: 2, fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
-          {t === 'aria' ? 'ARIA (IA)' : t === 'analytics' ? 'ANALYTICS' : t === 'mareografo' ? 'MAREOGRAFO' : t.toUpperCase()}
+          {t === 'aria' ? 'ARIA (IA)' : t === 'analytics' ? 'ANALYTICS' : t === 'mareografo' ? 'MAREOGRAFO' : t === 'usuarios' ? '👤 USUARIOS' : t.toUpperCase()}
           {t === 'alertas' && al.length > 0 && <span style={{ background: '#ef4444', color: '#fff', borderRadius: 10, padding: '2px 8px', fontSize: 11, fontWeight: 700, marginLeft: 8 }}>{al.length}</span>}
         </button>)}
       </div>
@@ -775,6 +944,7 @@ export default function App() {
           {tab === 'fuentes' && <div><h3 style={{ fontSize: 14, color: '#fbbf24', letterSpacing: 2, marginBottom: 10 }}>20 FUENTES OFICIALES</h3>{['sismo', 'alerta', 'boya', 'noticias'].map(t => <div key={t} style={{ marginBottom: 14 }}><div style={{ fontSize: 12, fontWeight: 700, color: '#f59e0b', letterSpacing: 2, marginBottom: 6 }}>{t === 'sismo' ? 'SISMOLOGICAS' : t === 'alerta' ? 'CENTROS ALERTA' : t === 'boya' ? 'BOYAS' : 'NOTICIAS'}</div>{sr.filter(s => s.source_type === t).map(s => <div key={s.id} style={{ background: '#0d1a2e', borderRadius: 6, padding: '10px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}><div style={{ display: 'flex', alignItems: 'center', gap: 10 }}><div style={{ width: 10, height: 10, borderRadius: '50%', background: s.status === 'active' ? '#22c55e' : '#ef4444' }} /><span style={{ fontSize: 13, fontWeight: 600, color: '#e2e8f0' }}>{s.name}</span><span style={{ fontSize: 11, color: '#94a3b8' }}>{s.country}</span></div><span style={{ fontSize: 11, fontWeight: 600, color: s.status === 'active' ? '#22c55e' : '#ef4444' }}>{s.status === 'active' ? 'ONLINE' : 'ERROR'}</span></div>)}</div>)}</div>}
           {tab === 'umbrales' && <div><h3 style={{ fontSize: 14, color: '#fbbf24', letterSpacing: 2, marginBottom: 10 }}>UMBRALES DHN</h3><div style={{ borderRadius: 10, overflow: 'hidden', border: '2px solid #1e3a5f' }}><table style={{ width: '100%', borderCollapse: 'collapse', background: '#0d1a2e' }}><thead><tr style={{ background: '#0a1628' }}>{['Magnitud', 'Prof.', 'Accion', 'Semaforo', 'Descripcion'].map(h => <th key={h} style={{ padding: 12, fontSize: 11, fontWeight: 700, color: '#fbbf24', textAlign: 'left', borderBottom: '1px solid #1e3a5f' }}>{h}</th>)}</tr></thead><tbody>{th.map((t, i) => <tr key={i}><td style={{ padding: 12, fontSize: 16, fontWeight: 700, color: thrColor(t.action), fontFamily: "'Orbitron'" }}>M{t.min_magnitude}+</td><td style={{ padding: 12, color: '#e2e8f0' }}>{t.max_depth_km}km</td><td style={{ padding: 12 }}><span style={{ padding: '4px 12px', borderRadius: 4, background: `${thrColor(t.action)}20`, color: thrColor(t.action), fontWeight: 700 }}>{t.action}</span></td><td style={{ padding: 12 }}><div style={{ width: 20, height: 20, borderRadius: '50%', background: thrColor(t.action) }} /></td><td style={{ padding: 12, color: '#cbd5e1', fontSize: 12 }}>{t.description}</td></tr>)}</tbody></table></div></div>}
           {tab === 'aria' && <AriaAssistant data={data} />}
+          {tab === 'usuarios' && isAdmin && <UsersTab />}
         </div>
 
         {/* RIGHT SIDEBAR - only show when not in mareografo tab */}
