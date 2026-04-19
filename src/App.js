@@ -44,7 +44,7 @@ Alertas: ${(data.alerts||[]).length > 0 ? data.alerts[0].title : 'Sin alertas'}`
     } catch (e) { setReport('Error conexion IA'); }
     setLoading(false);
   }, [data]);
-  useEffect(() => { if (data?.earthquakes?.length && !report && !loading) generateReport(); const i = setInterval(generateReport, 5*60*1000); return () => clearInterval(i); }, [data, generateReport, report, loading]);
+  useEffect(() => { if (data?.earthquakes?.length && !report && !loading) generateReport(); }, [data, generateReport, report, loading]);
   return (
     <div style={{ background: '#000000', borderRadius: 6, border: '1px solid #00ff0033', padding: 12, position: 'relative', overflow: 'hidden', boxShadow: 'inset 0 0 60px rgba(0,255,0,0.03), 0 0 10px rgba(0,255,0,0.1)' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: 'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.015) 2px, rgba(0,255,0,0.015) 4px)', pointerEvents: 'none', zIndex: 1 }} />
