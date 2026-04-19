@@ -131,7 +131,27 @@ function AnalyticsDashboard({ earthquakes = [], buoys = [], sources = [], data =
 function PacificMap({ earthquakes = [], buoys = [], focusedEqId = null }) {
   const views = [{ name: 'GLOBAL', vb: '0 0 900 500' }, { name: 'PERU', vb: '180 180 200 200' }, { name: 'PACIFICO SUR', vb: '150 250 400 250' }, { name: 'ASIA-PACIFICO', vb: '550 100 350 300' }];
   const [viewIdx, setViewIdx] = useState(0);
+  const [landPaths, setLandPaths] = useState([]);
   const toX = lng => ((lng + 180) / 360) * 900, toY = lat => ((90 - lat) / 180) * 500;
+  useEffect(() => {
+    const tx = lng => ((lng + 180) / 360) * 900, ty = lat => ((90 - lat) / 180) * 500;
+    fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
+      .then(r => r.json())
+      .then(geo => {
+        const paths = [];
+        geo.features.forEach((f, fi) => {
+          const geom = f.geometry; if (!geom) return;
+          const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
+          polys.forEach((poly, pi) => {
+            const ring = poly[0]; if (!ring || ring.length < 3) return;
+            const d = ring.map((pt, i) => `${i===0?'M':'L'}${tx(pt[0]).toFixed(1)},${ty(pt[1]).toFixed(1)}`).join(' ') + 'Z';
+            paths.push({ key: `${fi}-${pi}`, d });
+          });
+        });
+        setLandPaths(paths);
+      })
+      .catch(() => {});
+  }, []);
   return (
     <div style={{ position: 'relative', width: '100%', height: '100%' }}>
       <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 10, display: 'flex', gap: 4 }}>
@@ -139,6 +159,7 @@ function PacificMap({ earthquakes = [], buoys = [], focusedEqId = null }) {
       </div>
       <svg viewBox={views[viewIdx].vb} style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg,#0a1628,#0d1f3c,#0a1628)', transition: 'all 0.5s ease' }}>
         <defs><radialGradient id="gr" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" /><stop offset="100%" stopColor="#ef4444" stopOpacity="0" /></radialGradient><radialGradient id="gy" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" /><stop offset="100%" stopColor="#f59e0b" stopOpacity="0" /></radialGradient></defs>
+        {landPaths.map(p => <path key={p.key} d={p.d} fill="#0d2040" stroke="#1e3a5f" strokeWidth="0.4" />)}
         {[-60, -30, 0, 30, 60].map(l => <line key={l} x1={0} y1={toY(l)} x2={900} y2={toY(l)} stroke="#1e3a5f" strokeWidth="0.5" strokeDasharray="4,4" />)}
         {[-150, -120, -90, -60, 90, 120, 150, 180].map(l => <line key={`lo${l}`} x1={toX(l)} y1={0} x2={toX(l)} y2={500} stroke="#1e3a5f" strokeWidth="0.5" strokeDasharray="4,4" />)}
         <path d="M 255,195 L 250,210 248,230 245,250 242,270 240,290 238,310 236,330 234,340 236,350 240,360 245,370" stroke="#f59e0b" strokeWidth="2.5" fill="none" opacity="0.5" />
