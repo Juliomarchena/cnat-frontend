@@ -497,7 +497,16 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
     setElapsed(0);setPlaying(true);setSpeedMult(7200);
     setViewBox(sc.zoomVB||{x:0,y:0,w:MC.width,h:MC.height});
   };
-  const clearAll=()=>{setElapsed(0);setPlaying(false);setDemoMode(false);lastRef.current=0;};
+  const clearAll=()=>{
+    setElapsed(0);
+    setPlaying(false);
+    setDemoMode(false);
+    setSelectedEq(null);
+    setPortsETA([]);
+    lastRef.current=0;
+    // Volver a cargar sismos reales de USGS
+    loadEarthquakes();
+  };
   const selectEq=(eq)=>{setSelectedEq(eq);setPortsETA(calcETAs(eq));setElapsed(0);setPlaying(false);setDemoMode(false);};
 
   // ── Animación ─────────────────────────────────────
