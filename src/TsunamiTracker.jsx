@@ -627,8 +627,49 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
         {/* ── COLUMNA IZQUIERDA: Toolbar + Mapa ── */}
         <div style={{display:'flex',flexDirection:'column',gap:6}}>
 
+          {/* MAPA */}
+          {loading?(
+            <div style={{height:520,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(5,8,24,0.6)',borderRadius:8,border:'1px solid rgba(212,175,55,0.15)',color:'#00E5FF',fontSize:12,letterSpacing:'2px',fontFamily:F}}>
+              CARGANDO DATOS SÍSMICOS...
+            </div>
+          ):(
+            <div style={{position:'relative',borderRadius:8,overflow:'hidden',border:'1px solid rgba(212,175,55,0.15)',borderBottom:'none',borderRadius:'6px 6px 0 0',height:520,background:'rgba(5,8,24,0.6)'}}>
+              {/* Zoom overlay */}
+              <div style={{position:'absolute',top:10,right:10,zIndex:10,display:'flex',flexDirection:'column',gap:3,background:'rgba(10,21,53,0.85)',border:'1px solid rgba(212,175,55,0.3)',borderRadius:6,padding:4}}>
+                {[{sym:'+',zf:0.85},{sym:'−',zf:1.18}].map(({sym,zf})=>(
+                  <button key={sym} onClick={()=>setViewBox(v=>({x:v.x+v.w*(1-zf)/2,y:v.y+v.h*(1-zf)/2,w:Math.max(150,Math.min(MC.width*1.5,v.w*zf)),h:Math.max(100,Math.min(MC.height*1.5,v.h*zf))}))}
+                    style={{width:34,height:34,background:'rgba(5,8,24,0.8)',border:'1px solid rgba(212,175,55,0.2)',color:'#D4AF37',borderRadius:4,cursor:'pointer',fontSize:18,fontWeight:'bold',fontFamily:F,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    {sym}
+                  </button>
+                ))}
+                <div style={{height:1,background:'rgba(212,175,55,0.25)',margin:'2px'}}/>
+                <button onClick={()=>setViewBox({x:0,y:0,w:MC.width,h:MC.height})}
+                  style={{width:34,height:26,background:'rgba(5,8,24,0.8)',border:'1px solid rgba(212,175,55,0.15)',color:'#6B7B9F',borderRadius:4,cursor:'pointer',fontSize:8,fontFamily:F}}>FIT</button>
+              </div>
+              {/* Indicador T+ */}
+              {elapsed>0&&(
+                <div style={{position:'absolute',top:10,left:10,zIndex:10,background:'rgba(10,21,53,0.9)',border:`1px solid ${elapsed>=maxEtaHrs?'rgba(212,175,55,0.5)':'rgba(0,229,255,0.3)'}`,borderRadius:4,padding:'4px 10px',fontSize:10,color:elapsed>=maxEtaHrs?'#D4AF37':'#00E5FF',fontFamily:F}}>
+                  {elapsed>=maxEtaHrs?'✓ SIMULACIÓN COMPLETA':'T+ '+fmtHrs(elapsed)}
+                </div>
+              )}
+              {/* Mini-countdown sobre el mapa (siempre visible) */}
+              {callao&&elapsed>0&&(
+                <div style={{position:'absolute',bottom:10,left:'50%',transform:'translateX(-50%)',zIndex:10,background:callaoArrived?'rgba(76,175,80,0.9)':'rgba(229,57,53,0.85)',border:`1px solid ${callaoArrived?'#4CAF50':'#E53935'}`,borderRadius:6,padding:'5px 18px',textAlign:'center',backdropFilter:'blur(4px)'}}>
+                  <div style={{fontSize:8,color:'rgba(255,255,255,0.7)',letterSpacing:'2px',fontFamily:F}}>🎯 CALLAO</div>
+                  <div style={{fontSize:22,fontWeight:'bold',color:'#FFF',letterSpacing:'3px',fontFamily:F,lineHeight:1.1}}>
+                    {callaoArrived?'✓ LLEGÓ':fmtCnt(remainingCallao)}
+                  </div>
+                  {!callaoArrived&&<div style={{fontSize:8,color:'rgba(255,255,255,0.6)',fontFamily:F}}>{Math.round(remainingKm).toLocaleString()} km restantes</div>}
+                </div>
+              )}
+              <PacificMap event={selectedEq} elapsedHours={elapsed} portsETA={portsETA} viewBox={viewBox} mapRef={mapRef} onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} worldPaths={worldPaths}/>
+            </div>
+          )}
+        </div>
+
+
           {/* ── TOOLBAR HORIZONTAL ── */}
-          <div style={{display:'flex',gap:6,alignItems:'center',background:'rgba(10,21,53,0.7)',border:'1px solid rgba(212,175,55,0.15)',borderRadius:6,padding:'6px 10px',flexWrap:'nowrap',overflowX:'auto'}}>
+          <div style={{display:'flex',gap:6,alignItems:'center',background:'rgba(10,21,53,0.7)',borderTop:'1px solid rgba(212,175,55,0.15)',borderRadius:'0 0 6px 6px',padding:'6px 10px',flexWrap:'nowrap',overflowX:'auto'}}>
 
             {/* Simular / Pausar */}
             <button
@@ -700,46 +741,6 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
               {dataSource==='USGS'?'● USGS LIVE':'● CNAT'}
             </span>
           </div>
-
-          {/* MAPA */}
-          {loading?(
-            <div style={{height:520,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(5,8,24,0.6)',borderRadius:8,border:'1px solid rgba(212,175,55,0.15)',color:'#00E5FF',fontSize:12,letterSpacing:'2px',fontFamily:F}}>
-              CARGANDO DATOS SÍSMICOS...
-            </div>
-          ):(
-            <div style={{position:'relative',borderRadius:8,overflow:'hidden',border:'1px solid rgba(212,175,55,0.15)',height:520,background:'rgba(5,8,24,0.6)'}}>
-              {/* Zoom overlay */}
-              <div style={{position:'absolute',top:10,right:10,zIndex:10,display:'flex',flexDirection:'column',gap:3,background:'rgba(10,21,53,0.85)',border:'1px solid rgba(212,175,55,0.3)',borderRadius:6,padding:4}}>
-                {[{sym:'+',zf:0.85},{sym:'−',zf:1.18}].map(({sym,zf})=>(
-                  <button key={sym} onClick={()=>setViewBox(v=>({x:v.x+v.w*(1-zf)/2,y:v.y+v.h*(1-zf)/2,w:Math.max(150,Math.min(MC.width*1.5,v.w*zf)),h:Math.max(100,Math.min(MC.height*1.5,v.h*zf))}))}
-                    style={{width:34,height:34,background:'rgba(5,8,24,0.8)',border:'1px solid rgba(212,175,55,0.2)',color:'#D4AF37',borderRadius:4,cursor:'pointer',fontSize:18,fontWeight:'bold',fontFamily:F,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                    {sym}
-                  </button>
-                ))}
-                <div style={{height:1,background:'rgba(212,175,55,0.25)',margin:'2px'}}/>
-                <button onClick={()=>setViewBox({x:0,y:0,w:MC.width,h:MC.height})}
-                  style={{width:34,height:26,background:'rgba(5,8,24,0.8)',border:'1px solid rgba(212,175,55,0.15)',color:'#6B7B9F',borderRadius:4,cursor:'pointer',fontSize:8,fontFamily:F}}>FIT</button>
-              </div>
-              {/* Indicador T+ */}
-              {elapsed>0&&(
-                <div style={{position:'absolute',top:10,left:10,zIndex:10,background:'rgba(10,21,53,0.9)',border:`1px solid ${elapsed>=maxEtaHrs?'rgba(212,175,55,0.5)':'rgba(0,229,255,0.3)'}`,borderRadius:4,padding:'4px 10px',fontSize:10,color:elapsed>=maxEtaHrs?'#D4AF37':'#00E5FF',fontFamily:F}}>
-                  {elapsed>=maxEtaHrs?'✓ SIMULACIÓN COMPLETA':'T+ '+fmtHrs(elapsed)}
-                </div>
-              )}
-              {/* Mini-countdown sobre el mapa (siempre visible) */}
-              {callao&&elapsed>0&&(
-                <div style={{position:'absolute',bottom:10,left:'50%',transform:'translateX(-50%)',zIndex:10,background:callaoArrived?'rgba(76,175,80,0.9)':'rgba(229,57,53,0.85)',border:`1px solid ${callaoArrived?'#4CAF50':'#E53935'}`,borderRadius:6,padding:'5px 18px',textAlign:'center',backdropFilter:'blur(4px)'}}>
-                  <div style={{fontSize:8,color:'rgba(255,255,255,0.7)',letterSpacing:'2px',fontFamily:F}}>🎯 CALLAO</div>
-                  <div style={{fontSize:22,fontWeight:'bold',color:'#FFF',letterSpacing:'3px',fontFamily:F,lineHeight:1.1}}>
-                    {callaoArrived?'✓ LLEGÓ':fmtCnt(remainingCallao)}
-                  </div>
-                  {!callaoArrived&&<div style={{fontSize:8,color:'rgba(255,255,255,0.6)',fontFamily:F}}>{Math.round(remainingKm).toLocaleString()} km restantes</div>}
-                </div>
-              )}
-              <PacificMap event={selectedEq} elapsedHours={elapsed} portsETA={portsETA} viewBox={viewBox} mapRef={mapRef} onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} worldPaths={worldPaths}/>
-            </div>
-          )}
-        </div>
 
         {/* ── COLUMNA DERECHA: ancho fijo, no se achica con zoom ── */}
         <div style={{display:'flex',flexDirection:'column',gap:8,width:360,minWidth:360}}>
