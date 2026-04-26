@@ -609,17 +609,7 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
           <button style={sBtn(dataSource==='USGS')} onClick={()=>setDataSource('USGS')}>● USGS</button>
           <button style={sBtn(dataSource==='CNAT','#FB8C00','rgba(251,140,0,0.1)')} onClick={()=>setDataSource('CNAT')}>● CNAT</button>
           <button style={sBtn(false,'#D4AF37')} onClick={loadEarthquakes}>↻ REFRESCAR</button>
-          {/* Selector de escenarios DEMO */}
-          <div style={{display:'flex',gap:3,alignItems:'center',background:'rgba(10,21,53,0.6)',border:'1px solid rgba(167,139,250,0.3)',borderRadius:5,padding:'3px 6px'}}>
-            <span style={{fontSize:8,color:'#a78bfa',letterSpacing:'1px',fontFamily:F,fontWeight:'bold'}}>DEMO:</span>
-            {DEMO_SCENARIOS.map((sc,i)=>(
-              <button key={sc.id} onClick={()=>activateDemo(i)}
-                style={{...sBtn(demoMode&&demoScenario===i,'#a78bfa','rgba(167,139,250,0.15)'),padding:'3px 8px',fontSize:9,letterSpacing:0,border:`1px solid ${demoMode&&demoScenario===i?'#a78bfa':'rgba(167,139,250,0.2)'}`}}
-                title={sc.description}>
-                {sc.shortName}
-              </button>
-            ))}
-          </div>
+
           <button style={sBtn(false,'#6B7B9F')} onClick={clearAll}>↺ LIMPIAR</button>
         </div>
       </div>
@@ -628,74 +618,83 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
 
 
 
-      {/* ══ GRID PRINCIPAL: [panel-izq-sim] [mapa] [panel-der-datos] ══ */}
-      {/* Panel derecho es position:fixed width para que no se achique con el zoom */}
-      <div style={{display:'grid',gridTemplateColumns:'72px 1fr 360px',gap:10,alignItems:'start'}}>
+      {/* ══ GRID PRINCIPAL: [mapa+toolbar] [panel-der-datos] ══ */}
+      <div style={{display:'grid',gridTemplateColumns:'1fr 360px',gap:10,alignItems:'start'}}>
 
-        {/* ── COLUMNA IZQUIERDA: Panel de simulación vertical ── */}
-        <div style={{display:'flex',flexDirection:'column',gap:6,paddingTop:4}}>
-          {/* Presets de vista */}
-          <div style={{fontSize:8,color:'#D4AF37',letterSpacing:'1px',fontWeight:'bold',fontFamily:F,textAlign:'center',marginBottom:2}}>VISTA</div>
-          {['global','peru','america','pacifico','asia'].map(z=>(
-            <button key={z} style={{...sBtn(false),padding:'5px 4px',fontSize:9,letterSpacing:0,textAlign:'center',width:'100%'}} onClick={()=>zoomTo(z)}>
-              {z==='global'?'🌍':z==='peru'?'🇵🇪':z==='america'?'🌎':z==='pacifico'?'🌊':'🌏'}<br/>
-              <span style={{fontSize:8}}>{z.toUpperCase()}</span>
+        {/* ── COLUMNA IZQUIERDA: Toolbar + Mapa ── */}
+        <div style={{display:'flex',flexDirection:'column',gap:6}}>
+
+          {/* ── TOOLBAR HORIZONTAL ── */}
+          <div style={{display:'flex',gap:6,alignItems:'center',background:'rgba(10,21,53,0.7)',border:'1px solid rgba(212,175,55,0.15)',borderRadius:6,padding:'6px 10px',flexWrap:'nowrap',overflowX:'auto'}}>
+
+            {/* Simular / Pausar */}
+            <button
+              style={{...sBtn(playing,playing?'#FB8C00':'#00E5FF',playing?'rgba(251,140,0,0.12)':'rgba(0,229,255,0.08)'),
+                padding:'5px 16px',fontSize:13,whiteSpace:'nowrap',border:`2px solid ${playing?'#FB8C00':'#00E5FF'}`,flexShrink:0}}
+              onClick={()=>{setPlaying(p=>!p);lastRef.current=0;}}>
+              {playing?'⏸ PAUSAR':'▶ SIMULAR'}
             </button>
-          ))}
 
-          {/* Divider */}
-          <div style={{height:1,background:'rgba(212,175,55,0.2)',margin:'4px 0'}}/>
+            {/* Reset */}
+            <button style={{...sBtn(false),padding:'5px 10px',fontSize:12,flexShrink:0}} onClick={clearAll} title="Limpiar">↺</button>
 
-          {/* Fuente */}
-          <div style={{fontSize:8,color:'#D4AF37',letterSpacing:'1px',fontWeight:'bold',fontFamily:F,textAlign:'center',marginBottom:2}}>FUENTE</div>
-          <button style={{...sBtn(dataSource==='USGS'),padding:'5px 4px',fontSize:9,width:'100%',textAlign:'center'}} onClick={()=>setDataSource('USGS')}>USGS</button>
-          <button style={{...sBtn(dataSource==='CNAT','#FB8C00','rgba(251,140,0,0.1)'),padding:'5px 4px',fontSize:9,width:'100%',textAlign:'center'}} onClick={()=>setDataSource('CNAT')}>CNAT</button>
+            <div style={{width:1,height:20,background:'rgba(212,175,55,0.2)',flexShrink:0}}/>
 
-          {/* Divider */}
-          <div style={{height:1,background:'rgba(212,175,55,0.2)',margin:'4px 0'}}/>
+            {/* Velocidad dropdown */}
+            <div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
+              <span style={{fontSize:9,color:'#D4AF37',fontFamily:F,whiteSpace:'nowrap'}}>VEL.</span>
+              <select
+                value={speedMult}
+                onChange={e=>setSpeedMult(Number(e.target.value))}
+                style={{background:'rgba(5,8,24,0.9)',border:'1px solid rgba(212,175,55,0.3)',color:'#D4AF37',
+                  padding:'4px 6px',borderRadius:4,fontSize:10,fontFamily:F,cursor:'pointer'}}>
+                <option value={1800}>½×</option>
+                <option value={3600}>1×</option>
+                <option value={7200}>2×</option>
+              </select>
+            </div>
 
-          {/* Controles de simulación VERTICALES */}
-          <div style={{fontSize:8,color:'#D4AF37',letterSpacing:'1px',fontWeight:'bold',fontFamily:F,textAlign:'center',marginBottom:2}}>SIMULACIÓN</div>
-          <button
-            style={{...sBtn(playing,playing?'#FB8C00':'#00E5FF',playing?'rgba(251,140,0,0.12)':'rgba(0,229,255,0.08)'),padding:'8px 4px',fontSize:20,width:'100%',textAlign:'center',border:`2px solid ${playing?'#FB8C00':'#00E5FF'}`}}
-            onClick={()=>{setPlaying(p=>!p);lastRef.current=0;}}>
-            {playing?'⏸':'▶'}
-          </button>
-          <div style={{fontSize:8,color:playing?'#FB8C00':'#00E5FF',textAlign:'center',fontFamily:F,letterSpacing:'0.5px'}}>
-            {playing?'PAUSAR':'SIMULAR'}
-          </div>
+            <div style={{width:1,height:20,background:'rgba(212,175,55,0.2)',flexShrink:0}}/>
 
-          <button style={{...sBtn(false),padding:'6px 4px',fontSize:14,width:'100%',textAlign:'center'}} onClick={clearAll}>↺</button>
-          <div style={{fontSize:8,color:'#6B7B9F',textAlign:'center',fontFamily:F}}>RESET</div>
+            {/* Escenario DEMO dropdown */}
+            <div style={{display:'flex',alignItems:'center',gap:4,flexShrink:0}}>
+              <span style={{fontSize:9,color:'#a78bfa',fontFamily:F,whiteSpace:'nowrap'}}>DEMO</span>
+              <select
+                value={demoScenario}
+                onChange={e=>activateDemo(Number(e.target.value))}
+                style={{background:'rgba(5,8,24,0.9)',border:`1px solid ${demoMode?'rgba(167,139,250,0.6)':'rgba(167,139,250,0.25)'}`,
+                  color:'#a78bfa',padding:'4px 6px',borderRadius:4,fontSize:10,fontFamily:F,cursor:'pointer',maxWidth:200}}>
+                {DEMO_SCENARIOS.map((sc,i)=>(
+                  <option key={sc.id} value={i}>{sc.shortName}</option>
+                ))}
+              </select>
+            </div>
 
-          {/* Velocidad */}
-          <div style={{height:1,background:'rgba(212,175,55,0.2)',margin:'4px 0'}}/>
-          <div style={{fontSize:8,color:'#D4AF37',letterSpacing:'1px',fontWeight:'bold',fontFamily:F,textAlign:'center',marginBottom:2}}>VEL.</div>
-          {[[1800,'½×'],[3600,'1×'],[7200,'2×'],[18000,'5×'],[36000,'10×']].map(([v,l])=>(
-            <button key={v} style={{...sBtn(speedMult===v,'#D4AF37','rgba(212,175,55,0.1)'),padding:'4px 2px',fontSize:9,width:'100%',textAlign:'center'}} onClick={()=>setSpeedMult(v)}>{l}</button>
-          ))}
+            <div style={{width:1,height:20,background:'rgba(212,175,55,0.2)',flexShrink:0}}/>
 
-          {/* Divider */}
-          <div style={{height:1,background:'rgba(212,175,55,0.2)',margin:'4px 0'}}/>
-          <div style={{fontSize:8,color:'#a78bfa',letterSpacing:'1px',fontWeight:'bold',fontFamily:F,textAlign:'center',marginTop:4}}>DEMO</div>
-          {DEMO_SCENARIOS.map((sc,i)=>(
-            <button key={sc.id} onClick={()=>activateDemo(i)}
-              style={{...sBtn(demoMode&&demoScenario===i,'#a78bfa','rgba(167,139,250,0.15)'),padding:'3px 2px',fontSize:7,width:'100%',textAlign:'center',lineHeight:1.3,border:`1px solid ${demoMode&&demoScenario===i?'#a78bfa':'rgba(167,139,250,0.2)'}`}}
-              title={sc.description}>
-              {sc.shortName.split(',')[0]}<br/>
-              <span style={{opacity:0.7,fontSize:6}}>{sc.shortName.split(' ').pop()}</span>
-            </button>
-          ))}
-          <button style={{...sBtn(false),padding:'5px 4px',fontSize:9,width:'100%',textAlign:'center'}} onClick={loadEarthquakes}>↻<br/><span style={{fontSize:7}}>REFR.</span></button>
-        </div>
+            {/* Presets de vista */}
+            <div style={{display:'flex',gap:3,flexShrink:0}}>
+              {[['global','🌍'],['peru','🇵🇪'],['america','🌎'],['pacifico','🌊'],['asia','🌏']].map(([z,ic])=>(
+                <button key={z} style={{...sBtn(false),padding:'4px 7px',fontSize:9,whiteSpace:'nowrap'}}
+                  onClick={()=>zoomTo(z)} title={z.toUpperCase()}>
+                  {ic}
+                </button>
+              ))}
+            </div>
 
-        {/* ── COLUMNA CENTRO: Mapa ── */}
-        <div style={{display:'flex',flexDirection:'column',gap:8}}>
-          {/* Indicador fuente */}
-          <div style={{display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-            <span style={{fontSize:8,color:'#4A5878',fontFamily:F}}>Rueda=zoom · Arrastrar=mover</span>
-            <span style={{fontSize:9,color:'#22c55e',background:'rgba(34,197,94,0.08)',padding:'2px 8px',borderRadius:3,border:'1px solid rgba(34,197,94,0.25)',letterSpacing:'1px',fontFamily:F}}>
-              {dataSource==='USGS'?'● USGS LIVE':'● CNAT BACKEND'}
+            <div style={{width:1,height:20,background:'rgba(212,175,55,0.2)',flexShrink:0}}/>
+
+            {/* Fuente */}
+            <div style={{display:'flex',gap:3,flexShrink:0}}>
+              <button style={{...sBtn(dataSource==='USGS'),padding:'4px 8px',fontSize:9}} onClick={()=>setDataSource('USGS')}>USGS</button>
+              <button style={{...sBtn(dataSource==='CNAT','#FB8C00','rgba(251,140,0,0.1)'),padding:'4px 8px',fontSize:9}} onClick={()=>setDataSource('CNAT')}>CNAT</button>
+            </div>
+
+            {/* Indicador live — empuja al extremo derecho */}
+            <span style={{marginLeft:'auto',fontSize:9,color:'#22c55e',background:'rgba(34,197,94,0.08)',
+              padding:'3px 8px',borderRadius:3,border:'1px solid rgba(34,197,94,0.25)',
+              letterSpacing:'1px',fontFamily:F,flexShrink:0,whiteSpace:'nowrap'}}>
+              {dataSource==='USGS'?'● USGS LIVE':'● CNAT'}
             </span>
           </div>
 
