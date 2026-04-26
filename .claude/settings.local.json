@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m 'fix: update node engine to 24.x for Vercel *)",
+      "Bash(git push *)",
+      "Bash(git commit -m 'fix: remove engines field, node version set in Vercel dashboard *)",
+      "Bash(git commit -m 'fix: use npx react-scripts build to avoid permission denied error *)",
+      "Bash(git commit -m 'fix: remove eslint devDep, use plain npm install to fix permission denied *)",
+      "Bash(git commit -m 'fix: remove react-leaflet \\(unused, conflicts with React 18\\) *)",
+      "Bash(git commit -m 'fix: call react-scripts via node directly to bypass permission denied *)",
+      "Bash(npm install *)"
+    ]
+  }
+}

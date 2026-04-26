@@ -1,0 +1,727 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<title>CNAT — Plan de Capacitación AWS</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&family=Space+Mono:wght@400;700&family=Playfair+Display:ital,wght@0,700;1,700&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:#080B16;font-family:'Outfit',sans-serif;display:flex;justify-content:center;padding:20px;}
+.poster{width:1200px;background:linear-gradient(175deg,#080B16 0%,#0D1229 30%,#111832 55%,#0C1020 80%,#080B16 100%);position:relative;border-radius:16px;border:1px solid rgba(255,255,255,0.05);padding-bottom:50px;}
+.grid-bg{position:absolute;inset:0;background-image:linear-gradient(rgba(59,130,246,0.015) 1px,transparent 1px),linear-gradient(90deg,rgba(59,130,246,0.015) 1px,transparent 1px);background-size:80px 80px;border-radius:16px;pointer-events:none;}
+.orb{position:absolute;border-radius:50%;filter:blur(120px);pointer-events:none;}
+.orb-1{width:500px;height:500px;background:#F59E0B;opacity:0.04;top:0;right:0;}
+.orb-2{width:400px;height:400px;background:#3B82F6;opacity:0.05;bottom:20%;left:0;}
+
+/* HEADER */
+.header{position:relative;z-index:2;text-align:center;padding:44px 60px 10px;}
+.header-tag{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:4px;color:#F59E0B;display:inline-block;padding:6px 20px;border:1px solid rgba(245,158,11,0.3);border-radius:20px;background:rgba(245,158,11,0.06);margin-bottom:14px;}
+.header h1{font-family:'Playfair Display',serif;font-size:42px;font-weight:700;font-style:italic;color:#fff;line-height:1.2;margin-bottom:8px;}
+.header h1 .accent{background:linear-gradient(135deg,#F59E0B,#3B82F6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.header h2{font-size:14px;font-weight:400;color:#94A3B8;max-width:700px;margin:0 auto;}
+.header-meta{display:flex;justify-content:center;gap:24px;margin-top:14px;flex-wrap:wrap;}
+.meta-item{font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:#64748B;padding:4px 14px;border:1px solid rgba(100,116,139,0.2);border-radius:20px;}
+
+/* SECTION TITLES */
+.sec{position:relative;z-index:2;margin:28px 50px 0;}
+.sec-title{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:#F59E0B;margin-bottom:14px;display:flex;align-items:center;gap:10px;}
+.sec-title::after{content:'';flex:1;height:1px;background:rgba(245,158,11,0.15);}
+
+/* AWS SERVICES */
+.services-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+.svc-card{padding:12px;border-radius:10px;position:relative;}
+.svc-card.selected{background:rgba(34,197,94,0.06);border:1px solid rgba(34,197,94,0.2);}
+.svc-card.add{background:rgba(59,130,246,0.06);border:1px solid rgba(59,130,246,0.15);}
+.svc-badge{font-size:9px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 7px;border-radius:4px;display:inline-block;margin-bottom:6px;}
+.svc-card.selected .svc-badge{background:rgba(34,197,94,0.15);color:#4ADE80;}
+.svc-card.add .svc-badge{background:rgba(59,130,246,0.15);color:#60A5FA;}
+.svc-name{font-size:12px;font-weight:700;color:#fff;margin-bottom:3px;}
+.svc-desc{font-size:9px;color:#94A3B8;line-height:1.4;}
+.svc-use{font-size:9px;color:#64748B;margin-top:4px;font-style:italic;}
+
+/* CHALLENGES */
+.challenge-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;}
+.ch-badge{padding:6px 16px;border-radius:8px;font-size:10px;font-weight:600;}
+.ch-primary{background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.2);color:#FBBF24;}
+.ch-secondary{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);color:#60A5FA;}
+
+/* ROADMAP */
+.roadmap{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+.partner-card{border-radius:14px;overflow:hidden;}
+.partner-header{padding:14px 18px;display:flex;align-items:center;gap:12px;}
+.p1 .partner-header{background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(59,130,246,0.05));}
+.p2 .partner-header{background:linear-gradient(135deg,rgba(139,92,246,0.15),rgba(139,92,246,0.05));}
+.partner-avatar{width:42px;height:42px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:900;flex-shrink:0;}
+.p1 .partner-avatar{background:rgba(59,130,246,0.2);color:#60A5FA;border:2px solid rgba(59,130,246,0.3);}
+.p2 .partner-avatar{background:rgba(139,92,246,0.2);color:#A78BFA;border:2px solid rgba(139,92,246,0.3);}
+.partner-info-name{font-size:14px;font-weight:700;color:#fff;}
+.partner-info-role{font-size:10px;color:#94A3B8;margin-top:2px;}
+.partner-body{padding:14px 18px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.05);border-top:none;border-radius:0 0 14px 14px;}
+.phase{margin-bottom:14px;padding-bottom:14px;border-bottom:1px solid rgba(255,255,255,0.05);}
+.phase:last-child{margin-bottom:0;padding-bottom:0;border-bottom:none;}
+.phase-header{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.phase-num{width:22px;height:22px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;flex-shrink:0;}
+.p1 .phase-num{background:rgba(59,130,246,0.2);color:#60A5FA;}
+.p2 .phase-num{background:rgba(139,92,246,0.2);color:#A78BFA;}
+.phase-title{font-size:12px;font-weight:700;color:#e2e8f0;}
+.phase-period{font-size:9px;font-family:'Space Mono',monospace;color:#64748B;margin-left:auto;}
+.phase-cert{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:600;margin-bottom:6px;}
+.p1 .phase-cert{background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);color:#60A5FA;}
+.p2 .phase-cert{background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:#A78BFA;}
+.phase-topics{list-style:none;}
+.phase-topics li{font-size:10px;color:#94A3B8;padding:2px 0;display:flex;align-items:flex-start;gap:6px;}
+.phase-topics li::before{content:'▸';color:#64748B;flex-shrink:0;margin-top:1px;}
+.phase-cost{display:flex;justify-content:space-between;margin-top:6px;padding:6px 10px;background:rgba(255,255,255,0.03);border-radius:6px;}
+.pc-label{font-size:9px;color:#64748B;font-family:'Space Mono',monospace;}
+.pc-value{font-size:11px;font-weight:700;}
+.p1 .pc-value{color:#60A5FA;}
+.p2 .pc-value{color:#A78BFA;}
+
+/* TIMELINE */
+.timeline-wrapper{position:relative;}
+.timeline-bar{display:grid;grid-template-columns:repeat(8,1fr);gap:0;border-radius:10px;overflow:hidden;}
+.tl-month{padding:8px 6px;text-align:center;}
+.tl-label{font-family:'Space Mono',monospace;font-size:8px;color:#94A3B8;margin-bottom:4px;}
+.tl-events{display:flex;flex-direction:column;gap:3px;}
+.tl-event{font-size:8px;padding:2px 5px;border-radius:3px;text-align:center;line-height:1.2;}
+.ev-p1{background:rgba(59,130,246,0.15);color:#60A5FA;border:1px solid rgba(59,130,246,0.2);}
+.ev-p2{background:rgba(139,92,246,0.15);color:#A78BFA;border:1px solid rgba(139,92,246,0.2);}
+.ev-both{background:rgba(34,197,94,0.12);color:#4ADE80;border:1px solid rgba(34,197,94,0.2);}
+.ev-exam{background:rgba(245,158,11,0.15);color:#FBBF24;border:1px solid rgba(245,158,11,0.25);font-weight:700;}
+.tl-month:nth-child(odd){background:rgba(255,255,255,0.01);}
+.tl-month:nth-child(even){background:rgba(255,255,255,0.02);}
+
+/* CERTS TABLE */
+.certs-table{width:100%;border-collapse:collapse;border-radius:10px;overflow:hidden;}
+.certs-table th{padding:10px 14px;font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:#F59E0B;text-align:left;background:rgba(245,158,11,0.06);border-bottom:1px solid rgba(245,158,11,0.1);}
+.certs-table td{padding:10px 14px;font-size:11px;color:#CBD5E1;border-bottom:1px solid rgba(255,255,255,0.03);}
+.certs-table tr:last-child td{border-bottom:none;}
+.certs-table tr:hover td{background:rgba(255,255,255,0.02);}
+.lvl-badge{font-size:9px;padding:2px 8px;border-radius:4px;font-weight:700;}
+.lvl-base{background:rgba(34,197,94,0.1);color:#4ADE80;}
+.lvl-assoc{background:rgba(59,130,246,0.1);color:#60A5FA;}
+.lvl-spec{background:rgba(245,158,11,0.1);color:#FBBF24;}
+.lvl-pro{background:rgba(239,68,68,0.1);color:#FCA5A5;}
+.exam-cost{font-weight:700;color:#FBBF24;font-family:'Space Mono',monospace;}
+.for-who{font-size:9px;padding:2px 8px;border-radius:4px;}
+.fw-p1{background:rgba(59,130,246,0.1);color:#60A5FA;}
+.fw-p2{background:rgba(139,92,246,0.1);color:#A78BFA;}
+.fw-both{background:rgba(34,197,94,0.1);color:#4ADE80;}
+
+/* PLATFORMS */
+.platforms-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+.plat-card{padding:16px;border-radius:12px;position:relative;}
+.plat-top{background:rgba(34,197,94,0.05);border:2px solid rgba(34,197,94,0.2);}
+.plat-paid{background:rgba(59,130,246,0.05);border:1px solid rgba(59,130,246,0.15);}
+.plat-free{background:rgba(100,116,139,0.05);border:1px solid rgba(100,116,139,0.12);}
+.plat-badge{position:absolute;top:10px;right:10px;font-size:8px;font-weight:700;font-family:'Space Mono',monospace;padding:2px 8px;border-radius:4px;}
+.pb-top{background:rgba(34,197,94,0.15);color:#4ADE80;}
+.pb-paid{background:rgba(59,130,246,0.12);color:#60A5FA;}
+.pb-free{background:rgba(100,116,139,0.12);color:#94A3B8;}
+.plat-name{font-size:15px;font-weight:800;color:#fff;margin-bottom:2px;}
+.plat-stars{color:#F59E0B;font-size:12px;margin-bottom:6px;}
+.plat-cost{font-size:20px;font-weight:900;margin-bottom:4px;}
+.plat-top .plat-cost{color:#4ADE80;}
+.plat-paid .plat-cost{color:#60A5FA;}
+.plat-free .plat-cost{color:#94A3B8;}
+.plat-period{font-size:9px;color:#64748B;}
+.plat-url{display:block;font-family:'Space Mono',monospace;font-size:9px;color:#3B82F6;margin:8px 0;word-break:break-all;text-decoration:none;}
+.plat-url:hover{color:#60A5FA;}
+.plat-features{list-style:none;margin-top:8px;}
+.plat-features li{font-size:10px;color:#94A3B8;padding:2px 0;display:flex;align-items:center;gap:6px;}
+.plat-features li::before{content:'✓';color:#22C55E;font-size:9px;}
+.plat-for{margin-top:8px;font-size:9px;font-family:'Space Mono',monospace;padding:4px 8px;border-radius:4px;display:inline-block;}
+.plat-top .plat-for{background:rgba(34,197,94,0.1);color:#4ADE80;}
+.plat-paid .plat-for{background:rgba(59,130,246,0.1);color:#60A5FA;}
+.plat-free .plat-for{background:rgba(100,116,139,0.1);color:#94A3B8;}
+
+/* COSTS SUMMARY */
+.cost-grid-4{display:grid;grid-template-columns:1fr auto 1fr auto 1fr auto 1fr;align-items:center;gap:0;}
+.cost-block{text-align:center;padding:8px 12px;}
+.cost-label{font-family:'Space Mono',monospace;font-size:8px;letter-spacing:2px;color:#94A3B8;margin-bottom:3px;}
+.cost-amount{font-size:22px;font-weight:900;}
+.cost-sub{font-size:9px;color:#64748B;margin-top:2px;}
+.cost-divider{width:1px;height:50px;background:rgba(255,255,255,0.08);justify-self:center;}
+.cost-box{padding:18px 24px;border-radius:12px;background:linear-gradient(135deg,rgba(59,130,246,0.05),rgba(245,158,11,0.05));border:1px solid rgba(59,130,246,0.15);}
+
+/* LEARNING PATH VISUAL */
+.lp-visual{display:flex;align-items:stretch;gap:0;margin-top:0;overflow:hidden;border-radius:10px;}
+.lp-step{flex:1;padding:12px;text-align:center;position:relative;}
+.lp-step::after{content:'→';position:absolute;right:-8px;top:50%;transform:translateY(-50%);color:#475569;font-size:14px;z-index:1;}
+.lp-step:last-child::after{display:none;}
+.lp-s1{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.15);}
+.lp-s2{background:rgba(59,130,246,0.08);border:1px solid rgba(59,130,246,0.15);}
+.lp-s3{background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.15);}
+.lp-s4{background:rgba(139,92,246,0.08);border:1px solid rgba(139,92,246,0.15);}
+.lp-s5{background:rgba(239,68,68,0.08);border:1px solid rgba(239,68,68,0.15);}
+.lp-icon{font-size:20px;margin-bottom:4px;}
+.lp-title{font-size:10px;font-weight:700;color:#fff;margin-bottom:2px;}
+.lp-sub{font-size:8px;color:#94A3B8;}
+.lp-s1 .lp-title{color:#4ADE80;}
+.lp-s2 .lp-title{color:#60A5FA;}
+.lp-s3 .lp-title{color:#FBBF24;}
+.lp-s4 .lp-title{color:#A78BFA;}
+.lp-s5 .lp-title{color:#FCA5A5;}
+
+/* TIPS BOX */
+.tips-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;}
+.tip-card{padding:14px;border-radius:10px;background:rgba(245,158,11,0.04);border:1px solid rgba(245,158,11,0.1);}
+.tip-icon{font-size:18px;margin-bottom:6px;}
+.tip-title{font-size:11px;font-weight:700;color:#FBBF24;margin-bottom:4px;}
+.tip-text{font-size:10px;color:#94A3B8;line-height:1.5;}
+
+/* FOOTER */
+.footer{position:relative;z-index:2;text-align:center;padding:28px 50px 0;}
+.footer-brand{font-family:'Space Mono',monospace;font-size:10px;letter-spacing:3px;color:#F59E0B;}
+.footer-sub{font-size:10px;color:#475569;margin-top:4px;}
+
+/* PRINT */
+@media print{body{background:#080B16;padding:0;}  .poster{width:100%;border-radius:0;}}
+</style></head><body>
+<div class="poster">
+<div class="grid-bg"></div>
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-tag">CNAT — Centro Nacional de Alerta de Tsunamis</div>
+  <h1>Plan de <span class="accent">Capacitación AWS</span></h1>
+  <h2>Hoja de ruta completa para 2 socios — Certificaciones, plataformas, costos y tiempos reales</h2>
+  <div class="header-meta">
+    <span class="meta-item">MICROHELP — Julius Marchena</span>
+    <span class="meta-item">DURACIÓN TOTAL: 8 MESES</span>
+    <span class="meta-item">2 SOCIOS / 4 CERTIFICACIONES</span>
+    <span class="meta-item">INVERSIÓN: $400–$600 USD/SOCIO</span>
+  </div>
+</div>
+
+<!-- PASO 0: AWS SERVICES A SELECCIONAR -->
+<div class="sec">
+  <div class="sec-title">PASO 0 — SERVICIOS AWS A SELECCIONAR EN EL FORMULARIO DE STARTUP CREDITS</div>
+  <div class="services-grid">
+    <div class="svc-card selected"><span class="svc-badge">✅ YA TIENES</span><div class="svc-name">Amazon ECS</div><div class="svc-desc">Elastic Container Service</div><div class="svc-use">Backend FastAPI en Docker</div></div>
+    <div class="svc-card selected"><span class="svc-badge">✅ YA TIENES</span><div class="svc-name">Amazon RDS</div><div class="svc-desc">Relational Database Service</div><div class="svc-use">PostgreSQL — migración de Supabase</div></div>
+    <div class="svc-card selected"><span class="svc-badge">✅ YA TIENES</span><div class="svc-name">Amazon API Gateway</div><div class="svc-desc">Gestión y enrutamiento de APIs</div><div class="svc-use">Entrada a FastAPI backend</div></div>
+    <div class="svc-card selected"><span class="svc-badge">✅ YA TIENES</span><div class="svc-name">Amazon Cognito</div><div class="svc-desc">Autenticación de usuarios</div><div class="svc-use">Login operadores DHN</div></div>
+    <div class="svc-card add"><span class="svc-badge">➕ AGREGAR</span><div class="svc-name">Amazon S3</div><div class="svc-desc">Simple Storage Service</div><div class="svc-use">Hosting frontend React estático</div></div>
+    <div class="svc-card add"><span class="svc-badge">➕ AGREGAR</span><div class="svc-name">Amazon CloudFront</div><div class="svc-desc">CDN Global de baja latencia</div><div class="svc-use">Distribución frontend mundial</div></div>
+    <div class="svc-card add"><span class="svc-badge">➕ AGREGAR</span><div class="svc-name">Amazon CloudWatch</div><div class="svc-desc">Monitoreo y alertas 24/7</div><div class="svc-use">Uptime, logs, métricas CNAT</div></div>
+    <div class="svc-card add"><span class="svc-badge">➕ AGREGAR</span><div class="svc-name">Amazon SNS</div><div class="svc-desc">Simple Notification Service</div><div class="svc-use">Alertas tsunami SMS/email</div></div>
+    <div class="svc-card add"><span class="svc-badge">➕ AGREGAR</span><div class="svc-name">AWS WAF</div><div class="svc-desc">Web Application Firewall</div><div class="svc-use">Seguridad gobierno — Nivel 3</div></div>
+    <div class="svc-card add"><span class="svc-badge">➕ AGREGAR</span><div class="svc-name">Amazon Route 53</div><div class="svc-desc">DNS administrado y failover</div><div class="svc-use">cnat.dhn.mil.pe → AWS</div></div>
+  </div>
+  <div style="margin-top:12px;">
+    <div style="font-family:'Space Mono',monospace;font-size:9px;letter-spacing:2px;color:#94A3B8;margin-bottom:8px;">DESAFÍOS A MARCAR EN EL FORMULARIO:</div>
+    <div class="challenge-row">
+      <span class="ch-badge ch-primary">✓ Reducción de costos de AWS</span>
+      <span class="ch-badge ch-primary">✓ Selección de soluciones tecnológicas adecuadas</span>
+      <span class="ch-badge ch-primary">✓ Lanzamiento de productos más rápido</span>
+      <span class="ch-badge ch-secondary">✓ Riesgos legales y reglamentarios</span>
+      <span class="ch-badge ch-secondary">✓ Ampliación de la base de clientes</span>
+    </div>
+  </div>
+</div>
+
+<!-- RUTA VISUAL DE APRENDIZAJE -->
+<div class="sec">
+  <div class="sec-title">RUTA DE APRENDIZAJE — DE CERO A AWS CERTIFICADO</div>
+  <div class="lp-visual">
+    <div class="lp-step lp-s1"><div class="lp-icon">🆓</div><div class="lp-title">AWS Gratis</div><div class="lp-sub">Skill Builder<br>Cloud Practitioner<br>Semana 1-2</div></div>
+    <div class="lp-step lp-s2"><div class="lp-icon">📚</div><div class="lp-title">Cursos Udemy</div><div class="lp-sub">Stephane Maarek<br>$10-15 USD<br>Mes 1-2</div></div>
+    <div class="lp-step lp-s3"><div class="lp-icon">🎓</div><div class="lp-title">Cloud Practitioner</div><div class="lp-sub">Examen $100 USD<br>Mes 1-2<br>Ambos socios</div></div>
+    <div class="lp-step lp-s4"><div class="lp-icon">⚡</div><div class="lp-title">Especialización</div><div class="lp-sub">Socio 1: Architect<br>Socio 2: Developer<br>Mes 3-5</div></div>
+    <div class="lp-step lp-s5"><div class="lp-icon">🏆</div><div class="lp-title">Avanzado</div><div class="lp-sub">DevOps / Security<br>$150-300 USD<br>Mes 6-8</div></div>
+  </div>
+</div>
+
+<!-- ROADMAP POR SOCIO -->
+<div class="sec">
+  <div class="sec-title">PLAN DETALLADO POR SOCIO — 8 MESES</div>
+  <div class="roadmap">
+
+    <!-- SOCIO 1 -->
+    <div class="partner-card p1">
+      <div class="partner-header">
+        <div class="partner-avatar">J1</div>
+        <div><div class="partner-info-name">Socio 1 — Julius Marchena</div><div class="partner-info-role">Infraestructura · Cloud · DevOps · CEO</div></div>
+      </div>
+      <div class="partner-body">
+        <!-- FASE 1 -->
+        <div class="phase">
+          <div class="phase-header">
+            <div class="phase-num">1</div>
+            <div class="phase-title">AWS Cloud Practitioner (Fundamentos)</div>
+            <div class="phase-period">MES 1 – 2</div>
+          </div>
+          <div class="phase-cert">🎓 AWS Certified Cloud Practitioner (CLF-C02)</div>
+          <ul class="phase-topics">
+            <li>Conceptos de nube: IaaS, PaaS, SaaS</li>
+            <li>Servicios AWS core: EC2, S3, RDS, VPC, IAM</li>
+            <li>Modelo de responsabilidad compartida AWS</li>
+            <li>Facturación, soporte y precios AWS</li>
+            <li>Seguridad básica: grupos de seguridad, NACLs</li>
+            <li>Alta disponibilidad y tolerancia a fallos</li>
+          </ul>
+          <div class="phase-cost">
+            <span class="pc-label">EXAMEN</span><span class="pc-value">$100 USD</span>
+          </div>
+          <div class="phase-cost" style="margin-top:3px;">
+            <span class="pc-label">CURSO UDEMY</span><span class="pc-value">$10–15 USD</span>
+          </div>
+          <div style="margin-top:8px;padding:8px;background:rgba(59,130,246,0.05);border-radius:6px;border:1px solid rgba(59,130,246,0.1);">
+            <div style="font-size:9px;color:#64748B;font-family:'Space Mono',monospace;margin-bottom:3px;">URL CURSO RECOMENDADO:</div>
+            <a style="font-size:9px;color:#60A5FA;font-family:'Space Mono',monospace;word-break:break-all;" href="https://www.udemy.com/course/aws-certified-cloud-practitioner-new/">udemy.com/course/aws-certified-cloud-practitioner-new</a>
+            <div style="font-size:9px;color:#64748B;margin-top:2px;">Autor: Stephane Maarek — 4.7★ — 500,000+ estudiantes</div>
+          </div>
+        </div>
+        <!-- FASE 2 -->
+        <div class="phase">
+          <div class="phase-header">
+            <div class="phase-num">2</div>
+            <div class="phase-title">Solutions Architect Associate</div>
+            <div class="phase-period">MES 3 – 5</div>
+          </div>
+          <div class="phase-cert">🏗️ AWS Certified Solutions Architect – Associate (SAA-C03)</div>
+          <ul class="phase-topics">
+            <li>Diseño de arquitecturas resilientes y escalables</li>
+            <li>EC2, Auto Scaling, Load Balancers (ALB/NLB)</li>
+            <li>Bases de datos: RDS Multi-AZ, Aurora, DynamoDB</li>
+            <li>Redes: VPC, subnets, route tables, NAT Gateway</li>
+            <li>Storage: S3 clases, EBS, EFS, Storage Gateway</li>
+            <li>CloudFront + Route 53: DNS y CDN avanzado</li>
+            <li>Seguridad: KMS, Secrets Manager, ACM</li>
+            <li>Well-Architected Framework: 6 pilares</li>
+            <li>Estimación de costos con AWS Calculator</li>
+          </ul>
+          <div class="phase-cost">
+            <span class="pc-label">EXAMEN</span><span class="pc-value">$150 USD</span>
+          </div>
+          <div class="phase-cost" style="margin-top:3px;">
+            <span class="pc-label">CURSO UDEMY</span><span class="pc-value">$10–15 USD</span>
+          </div>
+          <div style="margin-top:8px;padding:8px;background:rgba(59,130,246,0.05);border-radius:6px;border:1px solid rgba(59,130,246,0.1);">
+            <div style="font-size:9px;color:#64748B;font-family:'Space Mono',monospace;margin-bottom:3px;">URL CURSOS RECOMENDADOS:</div>
+            <a style="font-size:9px;color:#60A5FA;font-family:'Space Mono',monospace;display:block;margin-bottom:3px;" href="https://www.udemy.com/course/aws-certified-solutions-architect-associate-saa-c03/">udemy.com — Stephane Maarek (SAA-C03)</a>
+            <a style="font-size:9px;color:#60A5FA;font-family:'Space Mono',monospace;display:block;" href="https://learn.cantrill.io/p/aws-certified-solutions-architect-associate">learn.cantrill.io — Adrian Cantrill ($40 — más profundo)</a>
+          </div>
+        </div>
+        <!-- FASE 3 -->
+        <div class="phase">
+          <div class="phase-header">
+            <div class="phase-num">3</div>
+            <div class="phase-title">DevOps Engineer Associate</div>
+            <div class="phase-period">MES 6 – 8</div>
+          </div>
+          <div class="phase-cert">🔄 AWS Certified DevOps Engineer – Professional (DOP-C02)</div>
+          <ul class="phase-topics">
+            <li>CI/CD: CodePipeline, CodeBuild, CodeDeploy</li>
+            <li>Infraestructura como código: CloudFormation, CDK</li>
+            <li>Contenedores: ECS Fargate, ECR, Kubernetes EKS</li>
+            <li>Monitoreo: CloudWatch Logs, Metrics, Alarms, Dashboards</li>
+            <li>Automatización: Lambda, EventBridge, Step Functions</li>
+            <li>Gestión de configuración y rollback</li>
+            <li>Deploy azul/verde, canary, rolling updates</li>
+          </ul>
+          <div class="phase-cost">
+            <span class="pc-label">EXAMEN</span><span class="pc-value">$300 USD</span>
+          </div>
+          <div class="phase-cost" style="margin-top:3px;">
+            <span class="pc-label">CURSO UDEMY</span><span class="pc-value">$10–15 USD</span>
+          </div>
+          <div style="margin-top:8px;padding:8px;background:rgba(59,130,246,0.05);border-radius:6px;border:1px solid rgba(59,130,246,0.1);">
+            <div style="font-size:9px;color:#64748B;font-family:'Space Mono',monospace;margin-bottom:3px;">URL CURSO:</div>
+            <a style="font-size:9px;color:#60A5FA;font-family:'Space Mono',monospace;" href="https://www.udemy.com/course/aws-certified-devops-engineer-professional-hands-on/">udemy.com — AWS DevOps Engineer Professional (Stephane Maarek)</a>
+          </div>
+          <div style="margin-top:6px;padding:5px 8px;background:rgba(34,197,94,0.06);border-radius:5px;font-size:9px;color:#4ADE80;">
+            ✅ Con esta cert puedes operar Nivel 2 AWS para CNAT DHN
+          </div>
+        </div>
+        <div style="padding:10px;background:rgba(59,130,246,0.06);border-radius:8px;border:1px solid rgba(59,130,246,0.15);">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:#60A5FA;margin-bottom:4px;">TOTAL INVERSIÓN SOCIO 1</div>
+          <div style="font-size:20px;font-weight:900;color:#60A5FA;">$580 – $620 USD</div>
+          <div style="font-size:9px;color:#64748B;">3 exámenes ($550) + 3 cursos Udemy ($30–45) + práctica AWS</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SOCIO 2 -->
+    <div class="partner-card p2">
+      <div class="partner-header">
+        <div class="partner-avatar">J2</div>
+        <div><div class="partner-info-name">Socio 2</div><div class="partner-info-role">Seguridad · Desarrollo · Compliance</div></div>
+      </div>
+      <div class="partner-body">
+        <!-- FASE 1 -->
+        <div class="phase">
+          <div class="phase-header">
+            <div class="phase-num">1</div>
+            <div class="phase-title">AWS Cloud Practitioner (Fundamentos)</div>
+            <div class="phase-period">MES 1 – 2</div>
+          </div>
+          <div class="phase-cert">🎓 AWS Certified Cloud Practitioner (CLF-C02)</div>
+          <ul class="phase-topics">
+            <li>Mismos fundamentos que Socio 1 (base común)</li>
+            <li>Enfoque especial: IAM, políticas, roles, usuarios</li>
+            <li>Seguridad básica: MFA, CloudTrail, Config</li>
+            <li>Compliance: modelos regulatorios en la nube</li>
+            <li>Cifrado en tránsito y en reposo</li>
+            <li>AWS Artifact: documentos de cumplimiento</li>
+          </ul>
+          <div class="phase-cost">
+            <span class="pc-label">EXAMEN</span><span class="pc-value">$100 USD</span>
+          </div>
+          <div class="phase-cost" style="margin-top:3px;">
+            <span class="pc-label">CURSO UDEMY</span><span class="pc-value">$10–15 USD</span>
+          </div>
+          <div style="margin-top:8px;padding:8px;background:rgba(139,92,246,0.05);border-radius:6px;border:1px solid rgba(139,92,246,0.1);">
+            <div style="font-size:9px;color:#64748B;font-family:'Space Mono',monospace;margin-bottom:3px;">MISMA URL QUE SOCIO 1:</div>
+            <a style="font-size:9px;color:#A78BFA;font-family:'Space Mono',monospace;" href="https://www.udemy.com/course/aws-certified-cloud-practitioner-new/">udemy.com/course/aws-certified-cloud-practitioner-new</a>
+            <div style="font-size:9px;color:#64748B;margin-top:2px;">Compartir cuenta Udemy — ambos estudian el mismo curso</div>
+          </div>
+        </div>
+        <!-- FASE 2 -->
+        <div class="phase">
+          <div class="phase-header">
+            <div class="phase-num">2</div>
+            <div class="phase-title">Developer Associate</div>
+            <div class="phase-period">MES 3 – 5</div>
+          </div>
+          <div class="phase-cert">💻 AWS Certified Developer – Associate (DVA-C02)</div>
+          <ul class="phase-topics">
+            <li>APIs con API Gateway + Lambda (serverless)</li>
+            <li>Almacenamiento: DynamoDB, ElastiCache, S3</li>
+            <li>Mensajería: SQS, SNS, Kinesis (alertas tsunami)</li>
+            <li>Autenticación: Cognito User Pools y Identity Pools</li>
+            <li>Deploy: Elastic Beanstalk, SAM Framework</li>
+            <li>SDK: Python (boto3) para integración FastAPI</li>
+            <li>X-Ray: tracing y depuración de aplicaciones</li>
+            <li>Secrets Manager y Parameter Store</li>
+          </ul>
+          <div class="phase-cost">
+            <span class="pc-label">EXAMEN</span><span class="pc-value">$150 USD</span>
+          </div>
+          <div class="phase-cost" style="margin-top:3px;">
+            <span class="pc-label">CURSO UDEMY</span><span class="pc-value">$10–15 USD</span>
+          </div>
+          <div style="margin-top:8px;padding:8px;background:rgba(139,92,246,0.05);border-radius:6px;border:1px solid rgba(139,92,246,0.1);">
+            <div style="font-size:9px;color:#64748B;font-family:'Space Mono',monospace;margin-bottom:3px;">URL CURSO:</div>
+            <a style="font-size:9px;color:#A78BFA;font-family:'Space Mono',monospace;" href="https://www.udemy.com/course/aws-certified-developer-associate-dva-c01/">udemy.com — AWS Developer Associate (Stephane Maarek)</a>
+          </div>
+        </div>
+        <!-- FASE 3 -->
+        <div class="phase">
+          <div class="phase-header">
+            <div class="phase-num">3</div>
+            <div class="phase-title">Security Specialty</div>
+            <div class="phase-period">MES 6 – 8</div>
+          </div>
+          <div class="phase-cert">🔒 AWS Certified Security – Specialty (SCS-C02)</div>
+          <ul class="phase-topics">
+            <li>IAM avanzado: SCPs, Permission Boundaries, ABAC</li>
+            <li>Detección: GuardDuty, Macie, Inspector, SecurityHub</li>
+            <li>Criptografía: KMS, CloudHSM, ACM, certificados</li>
+            <li>Protección DDoS: Shield Advanced + WAF rules</li>
+            <li>Auditoría: CloudTrail, Config, AWS Audit Manager</li>
+            <li>Redes seguras: PrivateLink, VPN Site-to-Site</li>
+            <li>Compliance: FedRAMP, ISO 27001, SOC 2 en AWS</li>
+            <li>Respuesta a incidentes de seguridad en la nube</li>
+          </ul>
+          <div class="phase-cost">
+            <span class="pc-label">EXAMEN</span><span class="pc-value">$300 USD</span>
+          </div>
+          <div class="phase-cost" style="margin-top:3px;">
+            <span class="pc-label">CURSO A CLOUD GURU</span><span class="pc-value">$49/mes</span>
+          </div>
+          <div style="margin-top:8px;padding:8px;background:rgba(139,92,246,0.05);border-radius:6px;border:1px solid rgba(139,92,246,0.1);">
+            <div style="font-size:9px;color:#64748B;font-family:'Space Mono',monospace;margin-bottom:3px;">URL CURSOS:</div>
+            <a style="font-size:9px;color:#A78BFA;font-family:'Space Mono',monospace;display:block;margin-bottom:3px;" href="https://www.udemy.com/course/aws-certified-security-specialty/">udemy.com — AWS Security Specialty (Zeal Vora)</a>
+            <a style="font-size:9px;color:#A78BFA;font-family:'Space Mono',monospace;display:block;" href="https://learn.acloud.guru/course/aws-certified-security-specialty">acloud.guru — AWS Security Specialty</a>
+          </div>
+          <div style="margin-top:6px;padding:5px 8px;background:rgba(239,68,68,0.06);border-radius:5px;font-size:9px;color:#FCA5A5;">
+            🔒 Requerida para vender Nivel 3 GovCloud a la DHN
+          </div>
+        </div>
+        <div style="padding:10px;background:rgba(139,92,246,0.06);border-radius:8px;border:1px solid rgba(139,92,246,0.15);">
+          <div style="font-family:'Space Mono',monospace;font-size:9px;color:#A78BFA;margin-bottom:4px;">TOTAL INVERSIÓN SOCIO 2</div>
+          <div style="font-size:20px;font-weight:900;color:#A78BFA;">$580 – $620 USD</div>
+          <div style="font-size:9px;color:#64748B;">3 exámenes ($550) + 3 cursos ($30–70) + práctica AWS</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TIMELINE VISUAL -->
+<div class="sec">
+  <div class="sec-title">CRONOGRAMA — 8 MESES VISUALIZADO</div>
+  <div class="timeline-bar">
+    <div class="tl-month"><div class="tl-label">MES 1</div><div class="tl-events"><span class="tl-event ev-both">Ambos: Cloud Practitioner estudio</span><span class="tl-event ev-both">Udemy: $10-15</span></div></div>
+    <div class="tl-month"><div class="tl-label">MES 2</div><div class="tl-events"><span class="tl-event ev-exam">🎓 EXAMEN CLF-C02</span><span class="tl-event ev-both">Ambos rinden $100 c/u</span></div></div>
+    <div class="tl-month"><div class="tl-label">MES 3</div><div class="tl-events"><span class="tl-event ev-p1">J1: Solutions Arch.</span><span class="tl-event ev-p2">J2: Developer Assoc.</span></div></div>
+    <div class="tl-month"><div class="tl-label">MES 4</div><div class="tl-events"><span class="tl-event ev-p1">J1: Labs EC2/VPC/RDS</span><span class="tl-event ev-p2">J2: Labs Lambda/SQS</span></div></div>
+    <div class="tl-month"><div class="tl-label">MES 5</div><div class="tl-events"><span class="tl-event ev-exam">🎓 EXAMEN SAA-C03</span><span class="tl-event ev-exam">🎓 EXAMEN DVA-C02</span></div></div>
+    <div class="tl-month"><div class="tl-label">MES 6</div><div class="tl-events"><span class="tl-event ev-p1">J1: DevOps + CI/CD</span><span class="tl-event ev-p2">J2: Security + WAF</span><span class="tl-event ev-both">🚀 Demo DHN N2</span></div></div>
+    <div class="tl-month"><div class="tl-label">MES 7</div><div class="tl-events"><span class="tl-event ev-p1">J1: ECS + CloudWatch</span><span class="tl-event ev-p2">J2: GuardDuty + IAM</span></div></div>
+    <div class="tl-month"><div class="tl-label">MES 8</div><div class="tl-events"><span class="tl-event ev-exam">🎓 EXAMEN DOP-C02</span><span class="tl-event ev-exam">🎓 EXAMEN SCS-C02</span><span class="tl-event ev-both">✅ Listos N2/N3</span></div></div>
+  </div>
+  <div style="display:flex;gap:12px;margin-top:8px;flex-wrap:wrap;">
+    <span style="font-size:9px;color:#60A5FA;display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:rgba(59,130,246,0.2);display:inline-block;"></span>Socio 1 (Julius)</span>
+    <span style="font-size:9px;color:#A78BFA;display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:rgba(139,92,246,0.2);display:inline-block;"></span>Socio 2</span>
+    <span style="font-size:9px;color:#4ADE80;display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:rgba(34,197,94,0.15);display:inline-block;"></span>Ambos socios</span>
+    <span style="font-size:9px;color:#FBBF24;display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:rgba(245,158,11,0.2);display:inline-block;"></span>Examen oficial</span>
+  </div>
+</div>
+
+<!-- TABLA COMPLETA DE CERTIFICACIONES -->
+<div class="sec">
+  <div class="sec-title">TABLA COMPLETA DE CERTIFICACIONES AWS</div>
+  <table class="certs-table">
+    <tr>
+      <th>CERTIFICACIÓN</th>
+      <th>CÓDIGO</th>
+      <th>NIVEL</th>
+      <th>PARA QUIÉN</th>
+      <th>DURACIÓN ESTUDIO</th>
+      <th>COSTO EXAMEN</th>
+      <th>URL REGISTRO OFICIAL</th>
+    </tr>
+    <tr>
+      <td><strong>AWS Cloud Practitioner</strong></td>
+      <td style="font-family:'Space Mono',monospace;font-size:9px;">CLF-C02</td>
+      <td><span class="lvl-badge lvl-base">FUNDAMENTO</span></td>
+      <td><span class="for-who fw-both">Ambos socios</span></td>
+      <td>4–6 semanas</td>
+      <td><span class="exam-cost">$100 USD</span></td>
+      <td><a style="font-size:9px;color:#3B82F6;font-family:'Space Mono',monospace;" href="https://aws.amazon.com/certification/certified-cloud-practitioner/">aws.amazon.com/certification/certified-cloud-practitioner</a></td>
+    </tr>
+    <tr>
+      <td><strong>Solutions Architect Associate</strong></td>
+      <td style="font-family:'Space Mono',monospace;font-size:9px;">SAA-C03</td>
+      <td><span class="lvl-badge lvl-assoc">ASSOCIATE</span></td>
+      <td><span class="for-who fw-p1">Socio 1</span></td>
+      <td>2–3 meses</td>
+      <td><span class="exam-cost">$150 USD</span></td>
+      <td><a style="font-size:9px;color:#3B82F6;font-family:'Space Mono',monospace;" href="https://aws.amazon.com/certification/certified-solutions-architect-associate/">aws.amazon.com/certification/certified-solutions-architect-associate</a></td>
+    </tr>
+    <tr>
+      <td><strong>Developer Associate</strong></td>
+      <td style="font-family:'Space Mono',monospace;font-size:9px;">DVA-C02</td>
+      <td><span class="lvl-badge lvl-assoc">ASSOCIATE</span></td>
+      <td><span class="for-who fw-p2">Socio 2</span></td>
+      <td>2–3 meses</td>
+      <td><span class="exam-cost">$150 USD</span></td>
+      <td><a style="font-size:9px;color:#3B82F6;font-family:'Space Mono',monospace;" href="https://aws.amazon.com/certification/certified-developer-associate/">aws.amazon.com/certification/certified-developer-associate</a></td>
+    </tr>
+    <tr>
+      <td><strong>DevOps Engineer Professional</strong></td>
+      <td style="font-family:'Space Mono',monospace;font-size:9px;">DOP-C02</td>
+      <td><span class="lvl-badge lvl-pro">PROFESSIONAL</span></td>
+      <td><span class="for-who fw-p1">Socio 1</span></td>
+      <td>3–4 meses</td>
+      <td><span class="exam-cost">$300 USD</span></td>
+      <td><a style="font-size:9px;color:#3B82F6;font-family:'Space Mono',monospace;" href="https://aws.amazon.com/certification/certified-devops-engineer-professional/">aws.amazon.com/certification/certified-devops-engineer-professional</a></td>
+    </tr>
+    <tr>
+      <td><strong>Security Specialty</strong></td>
+      <td style="font-family:'Space Mono',monospace;font-size:9px;">SCS-C02</td>
+      <td><span class="lvl-badge lvl-spec">SPECIALTY</span></td>
+      <td><span class="for-who fw-p2">Socio 2</span></td>
+      <td>3–4 meses</td>
+      <td><span class="exam-cost">$300 USD</span></td>
+      <td><a style="font-size:9px;color:#3B82F6;font-family:'Space Mono',monospace;" href="https://aws.amazon.com/certification/certified-security-specialty/">aws.amazon.com/certification/certified-security-specialty</a></td>
+    </tr>
+    <tr style="background:rgba(245,158,11,0.03);">
+      <td colspan="5" style="color:#FBBF24;font-weight:700;">TOTAL INVERSIÓN AMBOS SOCIOS (4 certs = 2 por socio)</td>
+      <td><span class="exam-cost" style="font-size:14px;">$1,000 USD</span></td>
+      <td style="color:#64748B;font-size:9px;">+ cursos: ~$60–150 USD</td>
+    </tr>
+  </table>
+</div>
+
+<!-- PLATAFORMAS DE ESTUDIO -->
+<div class="sec">
+  <div class="sec-title">PLATAFORMAS DE ESTUDIO — URLS Y COSTOS DETALLADOS</div>
+  <div class="platforms-grid">
+
+    <div class="plat-card plat-top">
+      <span class="plat-badge pb-top">⭐ #1 RECOMENDADO</span>
+      <div class="plat-name">Udemy</div>
+      <div class="plat-stars">★★★★★</div>
+      <div class="plat-cost">$10–15 <span style="font-size:12px;color:#64748B;">USD/curso</span></div>
+      <div class="plat-period">(en oferta — siempre hay descuentos)</div>
+      <a class="plat-url" href="https://www.udemy.com/user/stephane-maarek/">udemy.com — Stephane Maarek (todos los cursos AWS)</a>
+      <a class="plat-url" href="https://www.udemy.com/course/aws-certified-cloud-practitioner-new/">→ Cloud Practitioner CLF-C02</a>
+      <a class="plat-url" href="https://www.udemy.com/course/aws-certified-solutions-architect-associate-saa-c03/">→ Solutions Architect SAA-C03</a>
+      <a class="plat-url" href="https://www.udemy.com/course/aws-certified-developer-associate-dva-c01/">→ Developer Associate DVA-C02</a>
+      <a class="plat-url" href="https://www.udemy.com/course/aws-certified-devops-engineer-professional-hands-on/">→ DevOps Engineer DOP-C02</a>
+      <a class="plat-url" href="https://www.udemy.com/course/aws-certified-security-specialty/">→ Security Specialty SCS-C02</a>
+      <ul class="plat-features">
+        <li>Videos HD + subtítulos en español</li>
+        <li>Acceso de por vida al comprar</li>
+        <li>Preguntas de práctica incluidas</li>
+        <li>Certificado Udemy al completar</li>
+        <li>App móvil para estudiar offline</li>
+      </ul>
+      <span class="plat-for">PARA: Ambos socios — todos los cursos</span>
+    </div>
+
+    <div class="plat-card plat-paid">
+      <span class="plat-badge pb-paid">ALTAMENTE TÉCNICO</span>
+      <div class="plat-name">Adrian Cantrill</div>
+      <div class="plat-stars">★★★★★</div>
+      <div class="plat-cost">$40 <span style="font-size:12px;color:#64748B;">USD/curso</span></div>
+      <div class="plat-period">(pago único por curso, acceso de por vida)</div>
+      <a class="plat-url" href="https://learn.cantrill.io/">learn.cantrill.io — Página principal</a>
+      <a class="plat-url" href="https://learn.cantrill.io/p/aws-certified-solutions-architect-associate">→ Solutions Architect SAA-C03 ($40)</a>
+      <a class="plat-url" href="https://learn.cantrill.io/p/aws-certified-developer-associate">→ Developer Associate ($40)</a>
+      <a class="plat-url" href="https://learn.cantrill.io/p/aws-certified-devops-engineer-professional">→ DevOps Engineer ($40)</a>
+      <ul class="plat-features">
+        <li>El curso más profundo del mercado</li>
+        <li>Diagramas animados únicos</li>
+        <li>Labs con cuenta AWS real</li>
+        <li>Comunidad Discord activa</li>
+        <li>Actualizado constantemente</li>
+      </ul>
+      <span class="plat-for">PARA: Socio 1 — Solutions Architect</span>
+    </div>
+
+    <div class="plat-card plat-paid">
+      <span class="plat-badge pb-paid">LABS INCLUIDOS</span>
+      <div class="plat-name">A Cloud Guru</div>
+      <div class="plat-stars">★★★★☆</div>
+      <div class="plat-cost">$49 <span style="font-size:12px;color:#64748B;">USD/mes</span></div>
+      <div class="plat-period">(o $399/año — incluye todos los cursos)</div>
+      <a class="plat-url" href="https://learn.acloud.guru/">learn.acloud.guru — Página principal</a>
+      <a class="plat-url" href="https://learn.acloud.guru/course/aws-certified-security-specialty">→ Security Specialty SCS-C02</a>
+      <a class="plat-url" href="https://learn.acloud.guru/course/aws-certified-cloud-practitioner">→ Cloud Practitioner CLF-C02</a>
+      <ul class="plat-features">
+        <li>Sandbox AWS incluido (sin costo extra)</li>
+        <li>Laboratorios prácticos guiados</li>
+        <li>Exámenes de práctica ilimitados</li>
+        <li>Rutas de aprendizaje por rol</li>
+        <li>Ideal para Security Specialty</li>
+      </ul>
+      <span class="plat-for">PARA: Socio 2 — Security Specialty</span>
+    </div>
+
+    <div class="plat-card plat-free">
+      <span class="plat-badge pb-free">GRATIS</span>
+      <div class="plat-name">AWS Skill Builder</div>
+      <div class="plat-stars">★★★☆☆</div>
+      <div class="plat-cost">Gratis <span style="font-size:12px;color:#64748B;">/ $29 mes (Individual)</span></div>
+      <div class="plat-period">(plan gratuito incluye cursos básicos oficiales)</div>
+      <a class="plat-url" href="https://skillbuilder.aws/">skillbuilder.aws — Acceso gratuito</a>
+      <a class="plat-url" href="https://explore.skillbuilder.aws/learn/course/134/aws-cloud-practitioner-essentials">→ Cloud Practitioner Essentials (GRATIS)</a>
+      <a class="plat-url" href="https://explore.skillbuilder.aws/learn/learning_plan/view/1/cloud-essentials-learning-plan">→ Cloud Essentials Learning Plan (GRATIS)</a>
+      <ul class="plat-features">
+        <li>Contenido oficial de Amazon</li>
+        <li>Exámenes de práctica oficiales ($29/mes)</li>
+        <li>Laboratorios Jam (gamificados)</li>
+        <li>Perfecto para empezar gratis</li>
+      </ul>
+      <span class="plat-for">PARA: Ambos — primer mes gratis</span>
+    </div>
+
+    <div class="plat-card plat-free">
+      <span class="plat-badge pb-free">GRATIS</span>
+      <div class="plat-name">FreeCodeCamp YouTube</div>
+      <div class="plat-stars">★★★★☆</div>
+      <div class="plat-cost">100% <span style="font-size:12px;color:#64748B;">GRATIS</span></div>
+      <div class="plat-period">(YouTube — sin costo)</div>
+      <a class="plat-url" href="https://www.youtube.com/@freecodecamp">youtube.com/@freecodecamp</a>
+      <a class="plat-url" href="https://www.youtube.com/watch?v=NhDYbskXRgc">→ AWS Certified Cloud Practitioner (14 horas, gratis)</a>
+      <a class="plat-url" href="https://www.youtube.com/watch?v=Ia-UEYYR44s">→ AWS Solutions Architect (10 horas, gratis)</a>
+      <ul class="plat-features">
+        <li>Completamente gratuito</li>
+        <li>Cursos de 10-14 horas completos</li>
+        <li>Excelente para repasar conceptos</li>
+        <li>Sin necesidad de cuenta</li>
+      </ul>
+      <span class="plat-for">PARA: Ambos — repaso y complemento</span>
+    </div>
+
+    <div class="plat-card plat-free">
+      <span class="plat-badge pb-free">PRÁCTICA OFICIAL</span>
+      <div class="plat-name">Tutorials Dojo</div>
+      <div class="plat-stars">★★★★★</div>
+      <div class="plat-cost">$15 <span style="font-size:12px;color:#64748B;">USD/examen práctica</span></div>
+      <div class="plat-period">(los mejores practice exams del mercado)</div>
+      <a class="plat-url" href="https://tutorialsdojo.com/">tutorialsdojo.com — Página principal</a>
+      <a class="plat-url" href="https://portal.tutorialsdojo.com/courses/aws-certified-cloud-practitioner-practice-exams/">→ Practice Exams Cloud Practitioner ($15)</a>
+      <a class="plat-url" href="https://portal.tutorialsdojo.com/courses/aws-certified-solutions-architect-associate-practice-exams/">→ Practice Exams SAA-C03 ($15)</a>
+      <ul class="plat-features">
+        <li>Preguntas más cercanas al examen real</li>
+        <li>Explicaciones detalladas por respuesta</li>
+        <li>Modo timed + modo review</li>
+        <li>Indispensable 2 semanas antes del examen</li>
+      </ul>
+      <span class="plat-for">PARA: Ambos — semana previa al examen</span>
+    </div>
+  </div>
+</div>
+
+<!-- RESUMEN DE COSTOS TOTAL -->
+<div class="sec">
+  <div class="sec-title">RESUMEN TOTAL DE INVERSIÓN — AMBOS SOCIOS</div>
+  <div class="cost-box">
+    <div class="cost-grid-4">
+      <div class="cost-block">
+        <div class="cost-label">CURSOS (UDEMY)</div>
+        <div class="cost-amount" style="color:#4ADE80;">$60–90</div>
+        <div class="cost-sub">USD total ambos socios<br>~$10-15/curso × 6 cursos</div>
+      </div>
+      <div class="cost-divider"></div>
+      <div class="cost-block">
+        <div class="cost-label">PRÁCTICA EXAMS (DOJO)</div>
+        <div class="cost-amount" style="color:#60A5FA;">$60–80</div>
+        <div class="cost-sub">USD total<br>$15/examen × 4-5 exámenes</div>
+      </div>
+      <div class="cost-divider"></div>
+      <div class="cost-block">
+        <div class="cost-label">EXÁMENES OFICIALES AWS</div>
+        <div class="cost-amount" style="color:#FBBF24;">$1,000</div>
+        <div class="cost-sub">USD total ambos socios<br>5 exámenes × $100-300</div>
+      </div>
+      <div class="cost-divider"></div>
+      <div class="cost-block">
+        <div class="cost-label">TOTAL INVERSIÓN 8 MESES</div>
+        <div class="cost-amount" style="color:#FCA5A5;font-size:26px;">$1,120–1,170</div>
+        <div class="cost-sub">USD — ambos socios<br>~$140/mes entre los dos</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- CONSEJOS FINALES -->
+<div class="sec">
+  <div class="sec-title">CONSEJOS CLAVE PARA APROBAR</div>
+  <div class="tips-grid">
+    <div class="tip-card">
+      <div class="tip-icon">📅</div>
+      <div class="tip-title">Agenda el examen ANTES de estudiar</div>
+      <div class="tip-text">Registra el examen en aws.amazon.com/certification con 6-8 semanas de anticipación. La fecha fija crea urgencia real. El examen es online desde casa (Pearson VUE o PSI) — no necesitas ir a un centro.</div>
+      <div style="margin-top:8px;"><a style="font-size:9px;color:#60A5FA;font-family:'Space Mono',monospace;" href="https://aws.amazon.com/certification/certification-prep/">aws.amazon.com/certification/certification-prep</a></div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">🔬</div>
+      <div class="tip-title">Usa la cuenta AWS con los créditos Startup</div>
+      <div class="tip-text">Los créditos que estás solicitando ($1,000-$5,000 USD) sirven perfectamente para hacer laboratorios reales. Crea VPCs, levanta EC2s, configura RDS — práctica con datos del CNAT. Nada reemplaza hacerlo de verdad.</div>
+      <div style="margin-top:8px;"><a style="font-size:9px;color:#60A5FA;font-family:'Space Mono',monospace;" href="https://aws.amazon.com/free/">aws.amazon.com/free — Capa gratuita AWS</a></div>
+    </div>
+    <div class="tip-card">
+      <div class="tip-icon">📖</div>
+      <div class="tip-title">2 semanas antes: solo practice exams</div>
+      <div class="tip-text">Las últimas 2 semanas antes del examen: deja de ver videos y haz solo practice exams en Tutorials Dojo. Mínimo 3 exámenes completos (65 preguntas c/u). Si sacas 80%+ consistente, estás listo para rendir.</div>
+      <div style="margin-top:8px;"><a style="font-size:9px;color:#60A5FA;font-family:'Space Mono',monospace;" href="https://tutorialsdojo.com/aws-cheat-sheets/">tutorialsdojo.com/aws-cheat-sheets — Cheat sheets gratis</a></div>
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-brand">MICROHELP</div>
+  <div class="footer-sub">CEO & Founder: Julius Marchena — microhelp.com.pe | Plan elaborado con Claude AI — Anthropic</div>
+  <div style="margin-top:8px;font-family:'Space Mono',monospace;font-size:8px;color:#334155;">Para imprimir como PDF: Ctrl+P → Guardar como PDF → Tamaño: A3 horizontal o A4 vertical</div>
+</div>
+
+</div>
+</body></html>
