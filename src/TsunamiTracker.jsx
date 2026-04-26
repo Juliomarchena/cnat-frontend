@@ -477,13 +477,16 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
       const finalEqs=eqs.length>0?eqs:[{...DEMO_EQ,name:'REFERENCIA (sin sismos M6.5+ hoy): '+DEMO_SCENARIOS[0].name}];
       setEarthquakes(finalEqs);
       setLastUpdate(new Date().toLocaleTimeString('es-PE'));
-      if(!selectedEq){
-        const top=finalEqs.find(e=>e.magnitude>=7.5)||finalEqs[0];
-        if(top){setSelectedEq(top);setPortsETA(calcETAs(top));setElapsed(0);}
+      // NO auto-seleccionar — el operador elige el sismo o usa DEMO
+      // Solo auto-seleccionar si hay un sismo REAL crítico M≥7.5 en las últimas 24h
+      if(!selectedEq && eqs.length>0){
+        const critical=eqs.find(e=>e.magnitude>=7.5&&e.source==='USGS');
+        if(critical){setSelectedEq(critical);setPortsETA(calcETAs(critical));setElapsed(0);}
+        // Si no hay crítico real, NO seleccionar nada — mostrar mapa limpio
       }
     }catch(err){
       setError(err.message);
-      const fb=DEMO_SCENARIOS[0];setEarthquakes([fb]);setSelectedEq(fb);setPortsETA(calcETAs(fb));
+      const fb=DEMO_SCENARIOS[0];setEarthquakes([fb]);// No auto-seleccionar en error
     }
     setLoading(false);
   },[dataSource,backendUrl]);
@@ -503,8 +506,8 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
     setDemoMode(false);
     setSelectedEq(null);
     setPortsETA([]);
+    setDemoScenario(0);
     lastRef.current=0;
-    // Volver a cargar sismos reales de USGS
     loadEarthquakes();
   };
   const selectEq=(eq)=>{setSelectedEq(eq);setPortsETA(calcETAs(eq));setElapsed(0);setPlaying(false);setDemoMode(false);};
@@ -741,8 +744,19 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
         {/* ── COLUMNA DERECHA: ancho fijo, no se achica con zoom ── */}
         <div style={{display:'flex',flexDirection:'column',gap:8,width:360,minWidth:360}}>
 
-          {/* COUNTDOWN COMPACTO CALLAO */}
-          {callao&&(
+          {/* COUNTDOWN COMPACTO CALLAO — solo si hay sismo seleccionado y simulación activa */}
+          {!selectedEq&&(
+            <div style={{background:'rgba(10,21,53,0.7)',border:'1px solid rgba(212,175,55,0.2)',borderRadius:8,padding:'14px',textAlign:'center'}}>
+              <div style={{fontSize:11,color:'#D4AF37',letterSpacing:'2px',fontFamily:F,marginBottom:8}}>SISTEMA LISTO</div>
+              <div style={{fontSize:10,color:'#6B7B9F',fontFamily:F,lineHeight:1.7}}>
+                Seleccione un sismo de la lista<br/>o active un escenario DEMO<br/>para iniciar el seguimiento
+              </div>
+              <div style={{marginTop:10,fontSize:9,color:'#4A5878',fontFamily:F}}>
+                ▶ SIMULAR → ↺ LIMPIAR
+              </div>
+            </div>
+          )}
+          {callao&&elapsed>0&&(
             <div style={{background:callaoArrived?'linear-gradient(135deg,rgba(76,175,80,0.15),rgba(10,21,53,0.9))':percentComplete<50?'linear-gradient(135deg,rgba(76,175,80,0.12),rgba(10,21,53,0.9))':percentComplete<80?'linear-gradient(135deg,rgba(251,140,0,0.12),rgba(10,21,53,0.9))':'linear-gradient(135deg,rgba(229,57,53,0.15),rgba(10,21,53,0.9))',border:`2px solid ${callaoArrived?'#4CAF50':percentComplete<50?'#4CAF50':percentComplete<80?'#FB8C00':'#E53935'}`,borderRadius:8,padding:'10px 14px',boxShadow:`0 0 20px rgba(${callaoArrived?'76,175,80':'229,57,53'},0.2)`}}>
               <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:6}}>
                 <div style={{fontSize:9,color:callaoArrived?'#4CAF50':'#E53935',letterSpacing:'2px',fontWeight:'bold',fontFamily:F,display:'flex',alignItems:'center',gap:5}}>
@@ -769,8 +783,8 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
             </div>
           )}
 
-          {/* Alerta máxima */}
-          {maxAlert&&(
+          {/* Alerta máxima — solo si hay simulación activa */}
+          {maxAlert&&elapsed>0&&(
             <div style={{...panel,textAlign:'center',padding:'10px',border:`1px solid ${maxAlert.alert.color}40`}}>
               <div style={sT}>NIVEL MÁXIMO DE AMENAZA</div>
               <div style={{fontSize:22,fontWeight:'bold',color:maxAlert.alert.color,letterSpacing:'3px'}}>{maxAlert.alert.label}</div>
