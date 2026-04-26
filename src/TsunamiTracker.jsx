@@ -234,17 +234,16 @@ const featureToPaths=(f)=>{
 
 // ─── MAPA SVG ─────────────────────────────────────────
 function PacificMap({event,elapsedHours,portsETA,viewBox,mapRef,onWheel,onMouseDown,onMouseMove,onMouseUp,onMouseLeave,worldPaths=[]}){
-  // Siempre mostrar el mapa base; epicentro/ondas solo si hay event
-  const hasEvent=!!event;
-  const epi=hasEvent?pC(event.epicenter.lat,event.epicenter.lon):{x:-999,y:-999};
-  const fp=hasEvent?(event.faultParams||{strike:0,dip:20,rake:90,lengthKm:200}):{strike:0,dip:20,rake:90,lengthKm:200};
-  const rupPts=hasEvent?ruptureEndpoints(event.epicenter,fp.strike,fp.lengthKm||200):[{lat:0,lon:0},{lat:0,lon:0}];
-  const rupA=hasEvent?pC(rupPts[0].lat,rupPts[0].lon):{x:-999,y:-999};
-  const rupB=hasEvent?pC(rupPts[1].lat,rupPts[1].lon):{x:-999,y:-999};
+  if(!event)return null;
+  const epi=pC(event.epicenter.lat,event.epicenter.lon);
+  const fp=event.faultParams||{strike:0,dip:20,rake:90,lengthKm:200};
+  const rupPts=ruptureEndpoints(event.epicenter,fp.strike,fp.lengthKm||200);
+  const rupA=pC(rupPts[0].lat,rupPts[0].lon);
+  const rupB=pC(rupPts[1].lat,rupPts[1].lon);
   const dipDir=dipDirection(fp.strike);
   const oppDir=(dipDir+180)%360;
   const waveKm=waveFrontRadiusKm(elapsedHours);
-  const showWaves=hasEvent&&elapsedHours>0&&waveKm>50;
+  const showWaves=elapsedHours>0&&waveKm>50;
 
   // Crestas primarias y opuestas (idéntico al demo)
   const primaryCrests=[],oppositeCrests=[];
@@ -365,11 +364,11 @@ function PacificMap({event,elapsedHours,portsETA,viewBox,mapRef,onWheel,onMouseD
         </>
       )}
 
-      {/* LÍNEA DE RUPTURA — solo si hay evento */}
-      {hasEvent&&<line x1={rupA.x} y1={rupA.y} x2={rupB.x} y2={rupB.y} stroke="#E53935" strokeWidth={4} strokeLinecap="round" opacity={0.9}/>
+      {/* LÍNEA DE RUPTURA */}
+      <line x1={rupA.x} y1={rupA.y} x2={rupB.x} y2={rupB.y} stroke="#E53935" strokeWidth={4} strokeLinecap="round" opacity={0.9}/>
       <line x1={rupA.x} y1={rupA.y} x2={rupB.x} y2={rupB.y} stroke="#FF6B6B" strokeWidth={1.5} strokeLinecap="round" strokeDasharray="4,3"/>
       <circle cx={rupA.x} cy={rupA.y} r={4} fill="#E53935" stroke="#FFF" strokeWidth={1}/>
-      <circle cx={rupB.x} cy={rupB.y} r={4} fill="#E53935" stroke="#FFF" strokeWidth={1}/>}
+      <circle cx={rupB.x} cy={rupB.y} r={4} fill="#E53935" stroke="#FFF" strokeWidth={1}/>
 
       {/* EPICENTRO */}
       <circle cx={epi.x} cy={epi.y} r={14} fill="#E53935" opacity={0.3}>
@@ -378,8 +377,8 @@ function PacificMap({event,elapsedHours,portsETA,viewBox,mapRef,onWheel,onMouseD
       <circle cx={epi.x} cy={epi.y} r={6} fill="#E53935" stroke="#FFF" strokeWidth={2}/>
       <text x={epi.x} y={epi.y-18} fill="#E53935" fontSize={11} fontFamily="'Space Mono',monospace" textAnchor="middle" fontWeight="bold">EPICENTRO</text>
 
-      {/* PUERTOS PERUANOS — solo si hay evento */}
-      {hasEvent&&portsETA.map(port=>{
+      {/* PUERTOS PERUANOS */}
+      {portsETA.map(port=>{
         const p=pC(port.lat,port.lon);
         const arrived=hasWaveArrived(event.epicenter,port,elapsedHours,event.faultParams||{strike:0,rake:90});
         const color=arrived?port.alert.color:'#FFB300';
@@ -478,11 +477,12 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
       const finalEqs=eqs.length>0?eqs:[{...DEMO_EQ,name:'REFERENCIA (sin sismos M6.5+ hoy): '+DEMO_SCENARIOS[0].name}];
       setEarthquakes(finalEqs);
       setLastUpdate(new Date().toLocaleTimeString('es-PE'));
-      // Auto-seleccionar: primero sismo real crítico, si no el primero disponible
-      if(!selectedEq){
+      // NO auto-seleccionar — el operador elige el sismo o usa DEMO
+      // Solo auto-seleccionar si hay un sismo REAL crítico M≥7.5 en las últimas 24h
+      if(!selectedEq && eqs.length>0){
         const critical=eqs.find(e=>e.magnitude>=7.5&&e.source==='USGS');
-        const top=critical||finalEqs[0];
-        if(top){setSelectedEq(top);setPortsETA(calcETAs(top));setElapsed(0);}
+        if(critical){setSelectedEq(critical);setPortsETA(calcETAs(critical));setElapsed(0);}
+        // Si no hay crítico real, NO seleccionar nada — mostrar mapa limpio
       }
     }catch(err){
       setError(err.message);
@@ -627,46 +627,8 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
         {/* ── COLUMNA IZQUIERDA: Toolbar + Mapa ── */}
         <div style={{display:'flex',flexDirection:'column',gap:6}}>
 
-          {/* MAPA */}
-          {loading?(
-            <div style={{height:520,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(5,8,24,0.6)',borderRadius:8,border:'1px solid rgba(212,175,55,0.15)',color:'#00E5FF',fontSize:12,letterSpacing:'2px',fontFamily:F}}>
-              CARGANDO DATOS SÍSMICOS...
-            </div>
-          ):(
-            <div style={{position:'relative',borderRadius:8,overflow:'hidden',border:'1px solid rgba(212,175,55,0.15)',borderBottom:'none',borderRadius:'6px 6px 0 0',height:520,background:'rgba(5,8,24,0.6)'}}>
-              {/* Zoom overlay */}
-              <div style={{position:'absolute',top:10,right:10,zIndex:10,display:'flex',flexDirection:'column',gap:3,background:'rgba(10,21,53,0.85)',border:'1px solid rgba(212,175,55,0.3)',borderRadius:6,padding:4}}>
-                {[{sym:'+',zf:0.85},{sym:'−',zf:1.18}].map(({sym,zf})=>(
-                  <button key={sym} onClick={()=>setViewBox(v=>({x:v.x+v.w*(1-zf)/2,y:v.y+v.h*(1-zf)/2,w:Math.max(150,Math.min(MC.width*1.5,v.w*zf)),h:Math.max(100,Math.min(MC.height*1.5,v.h*zf))}))}
-                    style={{width:34,height:34,background:'rgba(5,8,24,0.8)',border:'1px solid rgba(212,175,55,0.2)',color:'#D4AF37',borderRadius:4,cursor:'pointer',fontSize:18,fontWeight:'bold',fontFamily:F,display:'flex',alignItems:'center',justifyContent:'center'}}>
-                    {sym}
-                  </button>
-                ))}
-                <div style={{height:1,background:'rgba(212,175,55,0.25)',margin:'2px'}}/>
-                <button onClick={()=>setViewBox({x:0,y:0,w:MC.width,h:MC.height})}
-                  style={{width:34,height:26,background:'rgba(5,8,24,0.8)',border:'1px solid rgba(212,175,55,0.15)',color:'#6B7B9F',borderRadius:4,cursor:'pointer',fontSize:8,fontFamily:F}}>FIT</button>
-              </div>
-              {/* Indicador T+ */}
-              {elapsed>0&&(
-                <div style={{position:'absolute',top:10,left:10,zIndex:10,background:'rgba(10,21,53,0.9)',border:`1px solid ${elapsed>=maxEtaHrs?'rgba(212,175,55,0.5)':'rgba(0,229,255,0.3)'}`,borderRadius:4,padding:'4px 10px',fontSize:10,color:elapsed>=maxEtaHrs?'#D4AF37':'#00E5FF',fontFamily:F}}>
-                  {elapsed>=maxEtaHrs?'✓ SIMULACIÓN COMPLETA':'T+ '+fmtHrs(elapsed)}
-                </div>
-              )}
-              {/* Mini-countdown sobre el mapa (siempre visible) */}
-              {callao&&elapsed>0&&(
-                <div style={{position:'absolute',bottom:10,left:'50%',transform:'translateX(-50%)',zIndex:10,background:callaoArrived?'rgba(76,175,80,0.9)':'rgba(229,57,53,0.85)',border:`1px solid ${callaoArrived?'#4CAF50':'#E53935'}`,borderRadius:6,padding:'5px 18px',textAlign:'center',backdropFilter:'blur(4px)'}}>
-                  <div style={{fontSize:8,color:'rgba(255,255,255,0.7)',letterSpacing:'2px',fontFamily:F}}>🎯 CALLAO</div>
-                  <div style={{fontSize:22,fontWeight:'bold',color:'#FFF',letterSpacing:'3px',fontFamily:F,lineHeight:1.1}}>
-                    {callaoArrived?'✓ LLEGÓ':fmtCnt(remainingCallao)}
-                  </div>
-                  {!callaoArrived&&<div style={{fontSize:8,color:'rgba(255,255,255,0.6)',fontFamily:F}}>{Math.round(remainingKm).toLocaleString()} km restantes</div>}
-                </div>
-              )}
-              <PacificMap event={selectedEq} elapsedHours={elapsed} portsETA={portsETA} viewBox={viewBox} mapRef={mapRef} onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} worldPaths={worldPaths}/>
-            </div>
-          )}
           {/* ── TOOLBAR HORIZONTAL ── */}
-          <div style={{display:'flex',gap:6,alignItems:'center',background:'rgba(10,21,53,0.7)',borderTop:'1px solid rgba(212,175,55,0.15)',borderRadius:'0 0 6px 6px',padding:'6px 10px',flexWrap:'nowrap',overflowX:'auto'}}>
+          <div style={{display:'flex',gap:6,alignItems:'center',background:'rgba(10,21,53,0.7)',border:'1px solid rgba(212,175,55,0.15)',borderRadius:6,padding:'6px 10px',flexWrap:'nowrap',overflowX:'auto'}}>
 
             {/* Simular / Pausar */}
             <button
@@ -738,6 +700,45 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
               {dataSource==='USGS'?'● USGS LIVE':'● CNAT'}
             </span>
           </div>
+
+          {/* MAPA */}
+          {loading?(
+            <div style={{height:520,display:'flex',alignItems:'center',justifyContent:'center',background:'rgba(5,8,24,0.6)',borderRadius:8,border:'1px solid rgba(212,175,55,0.15)',color:'#00E5FF',fontSize:12,letterSpacing:'2px',fontFamily:F}}>
+              CARGANDO DATOS SÍSMICOS...
+            </div>
+          ):(
+            <div style={{position:'relative',borderRadius:8,overflow:'hidden',border:'1px solid rgba(212,175,55,0.15)',height:520,background:'rgba(5,8,24,0.6)'}}>
+              {/* Zoom overlay */}
+              <div style={{position:'absolute',top:10,right:10,zIndex:10,display:'flex',flexDirection:'column',gap:3,background:'rgba(10,21,53,0.85)',border:'1px solid rgba(212,175,55,0.3)',borderRadius:6,padding:4}}>
+                {[{sym:'+',zf:0.85},{sym:'−',zf:1.18}].map(({sym,zf})=>(
+                  <button key={sym} onClick={()=>setViewBox(v=>({x:v.x+v.w*(1-zf)/2,y:v.y+v.h*(1-zf)/2,w:Math.max(150,Math.min(MC.width*1.5,v.w*zf)),h:Math.max(100,Math.min(MC.height*1.5,v.h*zf))}))}
+                    style={{width:34,height:34,background:'rgba(5,8,24,0.8)',border:'1px solid rgba(212,175,55,0.2)',color:'#D4AF37',borderRadius:4,cursor:'pointer',fontSize:18,fontWeight:'bold',fontFamily:F,display:'flex',alignItems:'center',justifyContent:'center'}}>
+                    {sym}
+                  </button>
+                ))}
+                <div style={{height:1,background:'rgba(212,175,55,0.25)',margin:'2px'}}/>
+                <button onClick={()=>setViewBox({x:0,y:0,w:MC.width,h:MC.height})}
+                  style={{width:34,height:26,background:'rgba(5,8,24,0.8)',border:'1px solid rgba(212,175,55,0.15)',color:'#6B7B9F',borderRadius:4,cursor:'pointer',fontSize:8,fontFamily:F}}>FIT</button>
+              </div>
+              {/* Indicador T+ */}
+              {elapsed>0&&(
+                <div style={{position:'absolute',top:10,left:10,zIndex:10,background:'rgba(10,21,53,0.9)',border:`1px solid ${elapsed>=maxEtaHrs?'rgba(212,175,55,0.5)':'rgba(0,229,255,0.3)'}`,borderRadius:4,padding:'4px 10px',fontSize:10,color:elapsed>=maxEtaHrs?'#D4AF37':'#00E5FF',fontFamily:F}}>
+                  {elapsed>=maxEtaHrs?'✓ SIMULACIÓN COMPLETA':'T+ '+fmtHrs(elapsed)}
+                </div>
+              )}
+              {/* Mini-countdown sobre el mapa (siempre visible) */}
+              {callao&&elapsed>0&&(
+                <div style={{position:'absolute',bottom:10,left:'50%',transform:'translateX(-50%)',zIndex:10,background:callaoArrived?'rgba(76,175,80,0.9)':'rgba(229,57,53,0.85)',border:`1px solid ${callaoArrived?'#4CAF50':'#E53935'}`,borderRadius:6,padding:'5px 18px',textAlign:'center',backdropFilter:'blur(4px)'}}>
+                  <div style={{fontSize:8,color:'rgba(255,255,255,0.7)',letterSpacing:'2px',fontFamily:F}}>🎯 CALLAO</div>
+                  <div style={{fontSize:22,fontWeight:'bold',color:'#FFF',letterSpacing:'3px',fontFamily:F,lineHeight:1.1}}>
+                    {callaoArrived?'✓ LLEGÓ':fmtCnt(remainingCallao)}
+                  </div>
+                  {!callaoArrived&&<div style={{fontSize:8,color:'rgba(255,255,255,0.6)',fontFamily:F}}>{Math.round(remainingKm).toLocaleString()} km restantes</div>}
+                </div>
+              )}
+              <PacificMap event={selectedEq} elapsedHours={elapsed} portsETA={portsETA} viewBox={viewBox} mapRef={mapRef} onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} worldPaths={worldPaths}/>
+            </div>
+          )}
         </div>
 
         {/* ── COLUMNA DERECHA: ancho fijo, no se achica con zoom ── */}
