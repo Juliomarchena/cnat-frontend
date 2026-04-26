@@ -665,9 +665,6 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
               <PacificMap event={selectedEq} elapsedHours={elapsed} portsETA={portsETA} viewBox={viewBox} mapRef={mapRef} onWheel={handleWheel} onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp} worldPaths={worldPaths}/>
             </div>
           )}
-        </div>
-
-
           {/* ── TOOLBAR HORIZONTAL ── */}
           <div style={{display:'flex',gap:6,alignItems:'center',background:'rgba(10,21,53,0.7)',borderTop:'1px solid rgba(212,175,55,0.15)',borderRadius:'0 0 6px 6px',padding:'6px 10px',flexWrap:'nowrap',overflowX:'auto'}}>
 
@@ -741,6 +738,7 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
               {dataSource==='USGS'?'● USGS LIVE':'● CNAT'}
             </span>
           </div>
+        </div>
 
         {/* ── COLUMNA DERECHA: ancho fijo, no se achica con zoom ── */}
         <div style={{display:'flex',flexDirection:'column',gap:8,width:360,minWidth:360}}>
