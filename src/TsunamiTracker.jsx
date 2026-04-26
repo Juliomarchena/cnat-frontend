@@ -234,16 +234,17 @@ const featureToPaths=(f)=>{
 
 // ─── MAPA SVG ─────────────────────────────────────────
 function PacificMap({event,elapsedHours,portsETA,viewBox,mapRef,onWheel,onMouseDown,onMouseMove,onMouseUp,onMouseLeave,worldPaths=[]}){
-  if(!event)return null;
-  const epi=pC(event.epicenter.lat,event.epicenter.lon);
-  const fp=event.faultParams||{strike:0,dip:20,rake:90,lengthKm:200};
-  const rupPts=ruptureEndpoints(event.epicenter,fp.strike,fp.lengthKm||200);
-  const rupA=pC(rupPts[0].lat,rupPts[0].lon);
-  const rupB=pC(rupPts[1].lat,rupPts[1].lon);
+  // Siempre mostrar el mapa base; epicentro/ondas solo si hay event
+  const hasEvent=!!event;
+  const epi=hasEvent?pC(event.epicenter.lat,event.epicenter.lon):{x:-999,y:-999};
+  const fp=hasEvent?(event.faultParams||{strike:0,dip:20,rake:90,lengthKm:200}):{strike:0,dip:20,rake:90,lengthKm:200};
+  const rupPts=hasEvent?ruptureEndpoints(event.epicenter,fp.strike,fp.lengthKm||200):[{lat:0,lon:0},{lat:0,lon:0}];
+  const rupA=hasEvent?pC(rupPts[0].lat,rupPts[0].lon):{x:-999,y:-999};
+  const rupB=hasEvent?pC(rupPts[1].lat,rupPts[1].lon):{x:-999,y:-999};
   const dipDir=dipDirection(fp.strike);
   const oppDir=(dipDir+180)%360;
   const waveKm=waveFrontRadiusKm(elapsedHours);
-  const showWaves=elapsedHours>0&&waveKm>50;
+  const showWaves=hasEvent&&elapsedHours>0&&waveKm>50;
 
   // Crestas primarias y opuestas (idéntico al demo)
   const primaryCrests=[],oppositeCrests=[];
@@ -364,11 +365,11 @@ function PacificMap({event,elapsedHours,portsETA,viewBox,mapRef,onWheel,onMouseD
         </>
       )}
 
-      {/* LÍNEA DE RUPTURA */}
-      <line x1={rupA.x} y1={rupA.y} x2={rupB.x} y2={rupB.y} stroke="#E53935" strokeWidth={4} strokeLinecap="round" opacity={0.9}/>
+      {/* LÍNEA DE RUPTURA — solo si hay evento */}
+      {hasEvent&&<line x1={rupA.x} y1={rupA.y} x2={rupB.x} y2={rupB.y} stroke="#E53935" strokeWidth={4} strokeLinecap="round" opacity={0.9}/>
       <line x1={rupA.x} y1={rupA.y} x2={rupB.x} y2={rupB.y} stroke="#FF6B6B" strokeWidth={1.5} strokeLinecap="round" strokeDasharray="4,3"/>
       <circle cx={rupA.x} cy={rupA.y} r={4} fill="#E53935" stroke="#FFF" strokeWidth={1}/>
-      <circle cx={rupB.x} cy={rupB.y} r={4} fill="#E53935" stroke="#FFF" strokeWidth={1}/>
+      <circle cx={rupB.x} cy={rupB.y} r={4} fill="#E53935" stroke="#FFF" strokeWidth={1}/>}
 
       {/* EPICENTRO */}
       <circle cx={epi.x} cy={epi.y} r={14} fill="#E53935" opacity={0.3}>
@@ -377,8 +378,8 @@ function PacificMap({event,elapsedHours,portsETA,viewBox,mapRef,onWheel,onMouseD
       <circle cx={epi.x} cy={epi.y} r={6} fill="#E53935" stroke="#FFF" strokeWidth={2}/>
       <text x={epi.x} y={epi.y-18} fill="#E53935" fontSize={11} fontFamily="'Space Mono',monospace" textAnchor="middle" fontWeight="bold">EPICENTRO</text>
 
-      {/* PUERTOS PERUANOS */}
-      {portsETA.map(port=>{
+      {/* PUERTOS PERUANOS — solo si hay evento */}
+      {hasEvent&&portsETA.map(port=>{
         const p=pC(port.lat,port.lon);
         const arrived=hasWaveArrived(event.epicenter,port,elapsedHours,event.faultParams||{strike:0,rake:90});
         const color=arrived?port.alert.color:'#FFB300';
@@ -477,12 +478,11 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
       const finalEqs=eqs.length>0?eqs:[{...DEMO_EQ,name:'REFERENCIA (sin sismos M6.5+ hoy): '+DEMO_SCENARIOS[0].name}];
       setEarthquakes(finalEqs);
       setLastUpdate(new Date().toLocaleTimeString('es-PE'));
-      // NO auto-seleccionar — el operador elige el sismo o usa DEMO
-      // Solo auto-seleccionar si hay un sismo REAL crítico M≥7.5 en las últimas 24h
-      if(!selectedEq && eqs.length>0){
+      // Auto-seleccionar: primero sismo real crítico, si no el primero disponible
+      if(!selectedEq){
         const critical=eqs.find(e=>e.magnitude>=7.5&&e.source==='USGS');
-        if(critical){setSelectedEq(critical);setPortsETA(calcETAs(critical));setElapsed(0);}
-        // Si no hay crítico real, NO seleccionar nada — mostrar mapa limpio
+        const top=critical||finalEqs[0];
+        if(top){setSelectedEq(top);setPortsETA(calcETAs(top));setElapsed(0);}
       }
     }catch(err){
       setError(err.message);
