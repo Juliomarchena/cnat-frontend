@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis, LineChart, Line, ReferenceLine } from 'recharts';
 import { supabase } from './supabaseClient';
 import TsunamiTracker from './TsunamiTracker'; // ← NUEVO
-
+import ModuloAlertasDHN from './ModuloAlertasDHN';
 const API = (process.env.REACT_APP_API_URL || 'https://cnat-backend-1.onrender.com') + '/api';
 const CLAUDE_KEY = process.env.REACT_APP_CLAUDE_KEY || '';
 const sevColor = s => s==='critical'?'#ef4444':s==='warning'?'#f59e0b':s==='moderate'?'#fb923c':'#64748b';
