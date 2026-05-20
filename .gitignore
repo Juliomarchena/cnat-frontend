@@ -4,3 +4,6 @@ node_modules/
 .env.production
 build/
 CLAUDE_CNAT_FRONTEND.md
+
+# Backups locales (FASE 3 y futuras)
+*.backup_*

@@ -687,21 +687,11 @@ export default function App() {
           {tab === 'analytics' && <AnalyticsDashboard earthquakes={eq} buoys={bu} sources={sr} data={data} />}
 
           {tab === 'alertas' && (
-            <div>
-              <h3 style={{ fontSize:14, color:'#fbbf24', letterSpacing:2, marginBottom:10 }}>ALERTAS TSUNAMI</h3>
-              {al.length === 0
-                ? <p style={{ color:'#94a3b8', padding:40, textAlign:'center' }}>Sin alertas</p>
-                : al.map(a => (
-                    <div key={a.id} style={{ borderLeft:`4px solid ${a.severity==='critical'?'#ef4444':'#f59e0b'}`, borderRadius:8, padding:14, marginBottom:8, background:'#0d1a2e' }}>
-                      <div style={{ display:'flex', justifyContent:'space-between', marginBottom:6 }}>
-                        <span style={{ fontSize:13, fontWeight:700, color:a.severity==='critical'?'#ef4444':'#f59e0b' }}>{a.alert_type}</span>
-                        <span style={{ fontSize:11, color:'#94a3b8' }}>{new Date(a.issued_at).toLocaleString('es-PE')}</span>
-                      </div>
-                      <p style={{ fontSize:13, color:'#e2e8f0' }}>{a.title}</p>
-                    </div>
-                  ))
-              }
-            </div>
+            <ModuloAlertasDHN
+              earthquakes={eq}
+              alerts={al}
+              kpis={k}
+            />
           )}
 
           {/* ══════════════════════════════════════════
