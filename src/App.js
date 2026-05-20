@@ -3,6 +3,7 @@ import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, Cart
 import { supabase } from './supabaseClient';
 import TsunamiTracker from './TsunamiTracker'; // ← NUEVO
 import ModuloAlertasDHN from './ModuloAlertasDHN';
+import ModuloVIGIA from './ModuloVIGIA';
 const API = (process.env.REACT_APP_API_URL || 'https://cnat-backend-1.onrender.com') + '/api';
 async function apiFetch(path, options = {}) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -583,15 +584,16 @@ export default function App() {
     'fuentes',
     'umbrales',
     'aria',
+    'vigia',
     ...(isAdmin ? ['usuarios'] : [])
   ];
 
-  const tabColors  = { aria: '#8b5cf6', analytics: '#06b6d4', mareografo: '#06b6d4', tsunami: '#00E5FF', usuarios: '#ef4444' };
+  const tabColors  = { aria: '#8b5cf6', vigia: '#06b6d4',analytics: '#06b6d4', mareografo: '#06b6d4', tsunami: '#00E5FF', usuarios: '#ef4444' };
   const tabLabels  = {
     mapa: 'MAPA', analytics: 'ANALYTICS', alertas: 'ALERTAS',
     tsunami: '🌊 TSUNAMI',   // ← etiqueta visible
     mareografo: 'MAREOGRAFO', boyas: 'BOYAS', fuentes: 'FUENTES',
-    umbrales: 'UMBRALES', aria: 'ARIA (IA)', usuarios: '👤 USUARIOS'
+    umbrales: 'UMBRALES', aria: 'ARIA (IA)', vigia: '🌊 VIGIA (IA)',usuarios: '👤 USUARIOS'
   };
 
   // Tabs que ocupan ancho completo (sin sidebar)
@@ -756,6 +758,7 @@ export default function App() {
           )}
 
           {tab === 'aria' && <AriaAssistant data={data} />}
+          {tab === 'vigia' && <ModuloVIGIA data={data} />}
           {tab === 'usuarios' && isAdmin && <UsersTab />}
         </div>
 
