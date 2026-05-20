@@ -4,6 +4,18 @@ import { supabase } from './supabaseClient';
 import TsunamiTracker from './TsunamiTracker'; // ← NUEVO
 import ModuloAlertasDHN from './ModuloAlertasDHN';
 const API = (process.env.REACT_APP_API_URL || 'https://cnat-backend-1.onrender.com') + '/api';
+async function apiFetch(path, options = {}) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  return fetch(`${API}${path}`, {
+    ...options,
+    headers: {
+      ...(options.headers || {}),
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  });
+}
 const CLAUDE_KEY = process.env.REACT_APP_CLAUDE_KEY || '';
 const sevColor = s => s==='critical'?'#ef4444':s==='warning'?'#f59e0b':s==='moderate'?'#fb923c':'#64748b';
 const thrColor = a => a==='ALARMA'?'#ef4444':a==='ALERTA'?'#f59e0b':a==='INFORMACION'?'#3b82f6':'#22c55e';
@@ -251,7 +263,7 @@ function TideGaugeMap() {
   useEffect(() => {
     const load = async () => {
       try {
-        const r = await fetch(`${API}/sealevel/stations`);
+        const r = await apiFetch('/sealevel/stations');
         const d = await r.json();
         if (d.stations && d.stations.length > 0) {
           const mapped = d.stations.map(mapStationFields).filter(s => s.code && s.lat && s.lon);
@@ -308,7 +320,7 @@ function TideGaugeMap() {
     if (mapInstanceRef.current) mapInstanceRef.current.flyTo([station.lat, station.lon], 6, { duration: 1.5 });
     if (!station.code) { setLoadingTide(false); return; }
     try {
-      const r = await fetch(`${API}/sealevel/station/${station.code}?hours=${hours}`);
+      const r = await apiFetch(`/sealevel/station/${station.code}?hours=${hours}`);
       const d = await r.json();
       if (d.data && d.data.length > 0) {
         const rawValues = d.data.map(p => p.value).filter(v => v != null);
@@ -527,7 +539,7 @@ export default function App() {
 
   const fetchData = useCallback(async () => {
     try {
-      const r = await fetch(`${API}/dashboard`);
+      const r = await apiFetch('/dashboard');
       const d = await r.json();
       setData(d); setError(null);
       if (d.kpis?.critical_count > 0 && d.kpis.critical_count > prevC.current) playAlarm();
