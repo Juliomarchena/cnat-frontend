@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ScatterChart, Scatter, ZAxis, LineChart, Line, ReferenceLine } from 'recharts';
 import { supabase } from './supabaseClient';
-import TsunamiTracker from './TsunamiTracker'; // ← NUEVO
+import TsunamiTracker from './TsunamiTracker';
 import ModuloAlertasDHN from './ModuloAlertasDHN';
 import ModuloVIGIA from './ModuloVIGIA';
 const API = (process.env.REACT_APP_API_URL || 'https://cnat-backend-1.onrender.com') + '/api';
@@ -552,7 +552,6 @@ export default function App() {
   useEffect(() => { if (session) { fetchData(); const i = setInterval(fetchData, 30000); return () => clearInterval(i); } }, [fetchData, session]);
   useEffect(() => { const i = setInterval(() => setNow(new Date()), 1000); return () => clearInterval(i); }, []);
 
-  // ── Loading / Auth guards ──
   if (session === undefined) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', flexDirection:'column', gap:20, background:'#050b18' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -573,30 +572,9 @@ export default function App() {
   const isA = k.critical_count > 0, rC = k.risk_level === 'ALTO' ? '#ef4444' : k.risk_level === 'MEDIO' ? '#f59e0b' : '#22c55e';
   const roleColor = role === 'admin' ? '#ef4444' : role === 'operador' ? '#3b82f6' : '#64748b';
 
-  // ── DEFINICIÓN DE TABS  (TSUNAMI agregado entre ALERTAS y MAREOGRAFO) ──
-  const tabs = [
-    'mapa',
-    'analytics',
-    'alertas',
-    'tsunami',        // ← NUEVO
-    'mareografo',
-    'boyas',
-    'fuentes',
-    'umbrales',
-    'aria',
-    'vigia',
-    ...(isAdmin ? ['usuarios'] : [])
-  ];
-
-  const tabColors  = { aria: '#8b5cf6', vigia: '#06b6d4',analytics: '#06b6d4', mareografo: '#06b6d4', tsunami: '#00E5FF', usuarios: '#ef4444' };
-  const tabLabels  = {
-    mapa: 'MAPA', analytics: 'ANALYTICS', alertas: 'ALERTAS',
-    tsunami: '🌊 TSUNAMI',   // ← etiqueta visible
-    mareografo: 'MAREOGRAFO', boyas: 'BOYAS', fuentes: 'FUENTES',
-    umbrales: 'UMBRALES', aria: 'ARIA (IA)', vigia: '🌊 VIGIA (IA)',usuarios: '👤 USUARIOS'
-  };
-
-  // Tabs que ocupan ancho completo (sin sidebar)
+  const tabs = ['mapa','analytics','alertas','tsunami','mareografo','boyas','fuentes','umbrales','aria','vigia',...(isAdmin ? ['usuarios'] : [])];
+  const tabColors  = { aria: '#8b5cf6', vigia: '#06b6d4', analytics: '#06b6d4', mareografo: '#06b6d4', tsunami: '#00E5FF', usuarios: '#ef4444' };
+  const tabLabels  = { mapa: 'MAPA', analytics: 'ANALYTICS', alertas: 'ALERTAS', tsunami: '🌊 TSUNAMI', mareografo: 'MAREOGRAFO', boyas: 'BOYAS', fuentes: 'FUENTES', umbrales: 'UMBRALES', aria: 'ARIA (IA)', vigia: '🌊 VIGIA (IA)', usuarios: '👤 USUARIOS' };
   const fullWidthTabs = new Set(['mareografo', 'tsunami']);
 
   return (
@@ -654,26 +632,14 @@ export default function App() {
       <div style={{ display:'flex', padding:'0 20px', background:'#070e1f', borderBottom:'2px solid #1e3a5f', overflowX:'auto' }}>
         {tabs.map(t => (
           <button key={t} onClick={() => setTab(t)} style={{
-            padding: '14px 20px',
-            background: tab === t ? '#1e3a5f' : 'transparent',
-            border: 'none',
-            borderBottom: tab === t ? `3px solid ${tabColors[t] || '#f59e0b'}` : '3px solid transparent',
+            padding: '14px 20px', background: tab === t ? '#1e3a5f' : 'transparent',
+            border: 'none', borderBottom: tab === t ? `3px solid ${tabColors[t] || '#f59e0b'}` : '3px solid transparent',
             color: tab === t ? (tabColors[t] || '#fbbf24') : '#e2e8f0',
-            cursor: 'pointer',
-            fontSize: 15,
-            fontWeight: 700,
-            letterSpacing: 2,
-            fontFamily: 'inherit',
-            whiteSpace: 'nowrap',
+            cursor: 'pointer', fontSize: 15, fontWeight: 700, letterSpacing: 2, fontFamily: 'inherit', whiteSpace: 'nowrap',
           }}>
             {tabLabels[t] || t.toUpperCase()}
-            {t === 'alertas' && al.length > 0 && (
-              <span style={{ background:'#ef4444', color:'#fff', borderRadius:10, padding:'2px 8px', fontSize:11, fontWeight:700, marginLeft:8 }}>{al.length}</span>
-            )}
-            {/* Badge sismos críticos en tab tsunami */}
-            {t === 'tsunami' && k.critical_count > 0 && (
-              <span style={{ background:'#F44336', color:'#fff', borderRadius:10, padding:'2px 8px', fontSize:11, fontWeight:700, marginLeft:8 }}>{k.critical_count}</span>
-            )}
+            {t === 'alertas' && al.length > 0 && <span style={{ background:'#ef4444', color:'#fff', borderRadius:10, padding:'2px 8px', fontSize:11, fontWeight:700, marginLeft:8 }}>{al.length}</span>}
+            {t === 'tsunami' && k.critical_count > 0 && <span style={{ background:'#F44336', color:'#fff', borderRadius:10, padding:'2px 8px', fontSize:11, fontWeight:700, marginLeft:8 }}>{k.critical_count}</span>}
           </button>
         ))}
       </div>
@@ -681,36 +647,28 @@ export default function App() {
       {/* ── CONTENIDO ── */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: fullWidthTabs.has(tab) ? '1fr' : '1fr 380px',
+        gridTemplateColumns: fullWidthTabs.has(tab) ? '1fr' : '1fr 420px',
         gap: 0,
         height: 'calc(100vh - 220px)'
       }}>
         {/* Columna principal */}
         <div style={{ padding: fullWidthTabs.has(tab) ? 0 : 12, overflow: 'auto', height: '100%' }}>
 
+          {/* ══ TAB MAPA: ARIA arriba + Mapa grande ══ */}
           {tab === 'mapa' && (
-            <div style={{ display:'flex', flexDirection:'column', gap:0, height:'100%' }}>
-              <div style={{ flex:1, borderRadius:10, overflow:'hidden', border:'2px solid #1e3a5f', minHeight:280 }}>
+            <div style={{ display:'flex', flexDirection:'column', gap:6, height:'100%' }}>
+              <AutoReport data={data} />
+              <div style={{ flex:1, borderRadius:10, overflow:'hidden', border:'2px solid #1e3a5f', minHeight:0 }}>
                 <PacificMap earthquakes={eq} buoys={bu} focusedEqId={focusedEqId} onClearFocus={clearFocus} />
               </div>
               <MapLegend />
-              <div style={{ height:220 }}><AnalyticsDashboard earthquakes={eq} buoys={bu} sources={sr} data={data} /></div>
             </div>
           )}
 
           {tab === 'analytics' && <AnalyticsDashboard earthquakes={eq} buoys={bu} sources={sr} data={data} />}
 
-          {tab === 'alertas' && (
-            <ModuloAlertasDHN
-              earthquakes={eq}
-              alerts={al}
-              kpis={k}
-            />
-          )}
+          {tab === 'alertas' && <ModuloAlertasDHN earthquakes={eq} alerts={al} kpis={k} />}
 
-          {/* ══════════════════════════════════════════
-              TAB TSUNAMI  — datos reales USGS + física
-              ══════════════════════════════════════════ */}
           {tab === 'tsunami' && (
             <div style={{ padding: 16, height: '100%', overflow: 'auto' }}>
               <TsunamiTracker backendUrl="https://cnat-backend-1.onrender.com" />
@@ -762,26 +720,35 @@ export default function App() {
           {tab === 'usuarios' && isAdmin && <UsersTab />}
         </div>
 
-        {/* ── SIDEBAR DERECHO (se oculta en tabs fullWidth) ── */}
+        {/* ── SIDEBAR DERECHO: Resumen + Feed en paralelo ── */}
         {!fullWidthTabs.has(tab) && (
           <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', display:'flex', flexDirection:'column', overflow:'hidden' }}>
-            <StatsSummary earthquakes={eq} alerts={al} buoys={bu} onFocus={focusEq} />
-            <div style={{ flex:1, overflow:'auto', padding:12 }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-                <h3 style={{ fontSize:12, color:'#fbbf24', letterSpacing:2, fontWeight:700 }}>FEED SISMICO</h3>
-                <div style={{ width:8, height:8, borderRadius:'50%', background:'#22c55e', animation:'blink 2s infinite' }} />
+            <div style={{ display:'flex', flex:1, overflow:'hidden' }}>
+
+              {/* Resumen Numérico */}
+              <div style={{ flex:1, borderRight:'1px solid #1e3a5f', overflow:'auto' }}>
+                <StatsSummary earthquakes={eq} alerts={al} buoys={bu} onFocus={focusEq} />
               </div>
-              {eq.slice(0,15).map(e => {
-                const c = sevColor(e.severity), isFocused = e.id === focusedEqId;
-                return (
-                  <div key={e.id} onClick={()=>focusEq(e.id)} style={{ padding:'7px 10px', borderRadius:6, marginBottom:4, borderLeft:`4px solid ${c}`, background:isFocused?'#1e3a5f44':'#0d1a2e44', cursor:'pointer', outline:isFocused?`1px solid ${c}`:'none', transition:'background 0.2s' }} title="Ver en mapa">
-                    <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ fontSize:14, fontWeight:700, color:c, fontFamily:"'Orbitron'" }}>M{e.magnitude}</span><span style={{ fontSize:9, color:'#94a3b8' }}>{new Date(e.event_time).toLocaleTimeString('es-PE')}</span></div>
-                    <div style={{ fontSize:10, color:'#cbd5e1', marginTop:2 }}>{e.place}</div>
-                    <div style={{ display:'flex', gap:8, marginTop:2 }}><span style={{ fontSize:9, color:'#94a3b8' }}>Prof:{e.depth_km}km</span><span style={{ fontSize:9, color:'#94a3b8' }}>{e.source_id?.toUpperCase()}</span></div>
-                  </div>
-                );
-              })}
+
+              {/* Feed Sísmico */}
+              <div style={{ flex:1, overflow:'auto', padding:12 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                  <h3 style={{ fontSize:12, color:'#fbbf24', letterSpacing:2, fontWeight:700 }}>FEED SISMICO</h3>
+                  <div style={{ width:8, height:8, borderRadius:'50%', background:'#22c55e', animation:'blink 2s infinite' }} />
+                </div>
+                {eq.slice(0,15).map(e => {
+                  const c = sevColor(e.severity), isFocused = e.id === focusedEqId;
+                  return (
+                    <div key={e.id} onClick={()=>focusEq(e.id)} style={{ padding:'7px 10px', borderRadius:6, marginBottom:4, borderLeft:`4px solid ${c}`, background:isFocused?'#1e3a5f44':'#0d1a2e44', cursor:'pointer', outline:isFocused?`1px solid ${c}`:'none', transition:'background 0.2s' }} title="Ver en mapa">
+                      <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ fontSize:14, fontWeight:700, color:c, fontFamily:"'Orbitron'" }}>M{e.magnitude}</span><span style={{ fontSize:9, color:'#94a3b8' }}>{new Date(e.event_time).toLocaleTimeString('es-PE')}</span></div>
+                      <div style={{ fontSize:10, color:'#cbd5e1', marginTop:2 }}>{e.place}</div>
+                      <div style={{ display:'flex', gap:8, marginTop:2 }}><span style={{ fontSize:9, color:'#94a3b8' }}>Prof:{e.depth_km}km</span><span style={{ fontSize:9, color:'#94a3b8' }}>{e.source_id?.toUpperCase()}</span></div>
+                    </div>
+                  );
+                })}
+              </div>
             </div>
+
             <div style={{ borderTop:'1px solid #1e3a5f', padding:'8px 12px', display:'flex', justifyContent:'space-between' }}>
               <span style={{ fontSize:10, color:'#f59e0b', fontWeight:700 }}>MICROHELP v2.0</span>
               <span style={{ fontSize:10, color:'#22c55e', fontWeight:700 }}>DATOS REALES</span>
