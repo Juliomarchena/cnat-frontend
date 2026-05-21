@@ -18,6 +18,8 @@ async function apiFetch(path, options = {}) {
   });
 }
 const CLAUDE_KEY = process.env.REACT_APP_CLAUDE_KEY || '';
+// PacificMapLeaflet se importa inline para evitar SSR issues
+
 const sevColor = s => s==='critical'?'#ef4444':s==='warning'?'#f59e0b':s==='moderate'?'#fb923c':'#64748b';
 const thrColor = a => a==='ALARMA'?'#ef4444':a==='ALERTA'?'#f59e0b':a==='INFORMACION'?'#3b82f6':'#22c55e';
 const COLORS = ['#3b82f6','#ef4444','#f59e0b','#22c55e','#8b5cf6','#ec4899','#06b6d4','#84cc16'];
@@ -141,48 +143,87 @@ function AnalyticsDashboard({ earthquakes = [], buoys = [], sources = [], data =
   );
 }
 
-/* ═══ PACIFIC MAP ═══ */
-function PacificMap({ earthquakes = [], buoys = [], focusedEqId = null, onClearFocus }) {
-  const views = [{ name: 'GLOBAL', vb: '0 0 900 500' }, { name: 'PERU', vb: '180 180 200 200' }, { name: 'PACIFICO SUR', vb: '150 250 400 250' }, { name: 'ASIA-PACIFICO', vb: '550 100 350 300' }];
-  const [viewIdx, setViewIdx] = useState(0);
-  const [landPaths, setLandPaths] = useState([]);
-  const toX = lng => ((lng + 180) / 360) * 900, toY = lat => ((90 - lat) / 180) * 500;
+/* ═══ PACIFIC MAP (Leaflet) ═══ */
+function PacificMapLeaflet({ earthquakes = [], buoys = [], focusedEqId = null, onClearFocus }) {
+  const mapRef = React.useRef(null);
+  const mapInstanceRef = React.useRef(null);
+  const markersRef = React.useRef([]);
+  const buoyMarkersRef = React.useRef([]);
+  const sevColor = s => s==='critical'?'#ef4444':s==='warning'?'#f59e0b':s==='moderate'?'#fb923c':'#64748b';
+
   useEffect(() => {
-    const tx = lng => ((lng + 180) / 360) * 900, ty = lat => ((90 - lat) / 180) * 500;
-    fetch('https://raw.githubusercontent.com/holtzy/D3-graph-gallery/master/DATA/world.geojson')
-      .then(r => r.json())
-      .then(geo => {
-        const paths = [];
-        geo.features.forEach((f, fi) => {
-          const geom = f.geometry; if (!geom) return;
-          const polys = geom.type === 'Polygon' ? [geom.coordinates] : geom.coordinates;
-          polys.forEach((poly, pi) => {
-            const ring = poly[0]; if (!ring || ring.length < 3) return;
-            const d = ring.map((pt, i) => `${i===0?'M':'L'}${tx(pt[0]).toFixed(1)},${ty(pt[1]).toFixed(1)}`).join(' ') + 'Z';
-            paths.push({ key: `${fi}-${pi}`, d });
-          });
-        });
-        setLandPaths(paths);
-      })
-      .catch(() => {});
+    if (!mapRef.current || mapInstanceRef.current) return;
+    if (!document.getElementById('leaflet-css-main')) {
+      const link = document.createElement('link');
+      link.id = 'leaflet-css-main'; link.rel = 'stylesheet';
+      link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+      document.head.appendChild(link);
+    }
+    const L = require('leaflet');
+    const map = L.map(mapRef.current, { center: [10, -150], zoom: 3, minZoom: 2, maxZoom: 10, zoomControl: true, attributionControl: false });
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains: 'abcd', maxZoom: 19 }).addTo(map);
+    L.control.attribution({ position: 'bottomright', prefix: false }).addAttribution('CNAT - MICROHELP | CartoDB').addTo(map);
+    mapInstanceRef.current = map;
+    return () => { if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current = null; } };
   }, []);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    const L = require('leaflet');
+    const map = mapInstanceRef.current;
+    markersRef.current.forEach(m => map.removeLayer(m));
+    markersRef.current = [];
+    earthquakes.forEach((eq, i) => {
+      if (!eq.latitude || !eq.longitude) return;
+      const c = sevColor(eq.severity);
+      const r = Math.max(5, (eq.magnitude || 0) * 2.5);
+      const isFocused = eq.id === focusedEqId;
+      const isPulse = eq.severity === 'critical' || eq.severity === 'warning' || isFocused;
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="position:relative;width:${r*2}px;height:${r*2}px;">${isPulse?`<div style="position:absolute;inset:0;border-radius:50%;background:${c};opacity:0.25;animation:pulse-map 1.5s infinite;transform:scale(2.5);"></div>`:''}<div style="position:absolute;inset:0;border-radius:50%;background:${c};border:2px solid ${isFocused?'#fff':c};box-shadow:0 0 ${isFocused?14:6}px ${c};"></div>${eq.magnitude>=4.5||isFocused?`<div style="position:absolute;top:${r*2+3}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:700;color:${isFocused?'#fff':c};font-family:monospace;text-shadow:0 1px 3px #000;">M${eq.magnitude}</div>`:''}</div>`,
+        iconSize: [r*2, r*2], iconAnchor: [r, r],
+      });
+      const marker = L.marker([eq.latitude, eq.longitude], { icon });
+      marker.bindTooltip(`<div style="font-family:monospace;font-size:11px;line-height:1.6;min-width:200px"><b style="color:#fbbf24;font-size:14px">M${eq.magnitude}</b> <span style="color:${c};font-size:10px">${(eq.severity||'').toUpperCase()}</span><br/><span style="color:#e2e8f0">${eq.place||'N/A'}</span><br/><span style="color:#94a3b8">Prof: ${eq.depth_km}km | ${(eq.source_id||'').toUpperCase()}</span><br/><span style="color:#64748b">${new Date(eq.event_time).toLocaleString('es-PE')}</span></div>`, { className: 'cnat-map-tooltip', direction: 'top', offset: [0, -r] });
+      if (isFocused) marker.on('click', onClearFocus);
+      marker.addTo(map);
+      markersRef.current.push(marker);
+    });
+  }, [earthquakes, focusedEqId, onClearFocus]);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    const L = require('leaflet');
+    const map = mapInstanceRef.current;
+    buoyMarkersRef.current.forEach(m => map.removeLayer(m));
+    buoyMarkersRef.current = [];
+    buoys.forEach(b => {
+      if (!b.latitude || !b.longitude) return;
+      const c = b.status==='alert'?'#ef4444':b.status==='warning'?'#f59e0b':'#22c55e';
+      const icon = L.divIcon({
+        className: '',
+        html: `<div style="display:flex;align-items:center;gap:4px;white-space:nowrap;"><div style="width:10px;height:10px;background:${c};border:2px solid #fff;border-radius:50%;box-shadow:0 0 6px ${c};flex-shrink:0;"></div><span style="font-size:9px;color:#fbbf24;font-family:monospace;background:rgba(5,11,24,0.85);padding:1px 3px;border-radius:2px;">${(b.name||'').replace('DART ','').substring(0,12)}</span></div>`,
+        iconSize: [90, 14], iconAnchor: [5, 7],
+      });
+      const marker = L.marker([b.latitude, b.longitude], { icon });
+      marker.bindTooltip(`<b style="color:#fbbf24">${b.name}</b><br/><span style="color:${c}">${(b.status||'').toUpperCase()}</span>`, { className: 'cnat-map-tooltip', direction: 'top' });
+      marker.addTo(map);
+      buoyMarkersRef.current.push(marker);
+    });
+  }, [buoys]);
+
+  useEffect(() => {
+    if (!mapInstanceRef.current || !focusedEqId) return;
+    const eq = earthquakes.find(e => e.id === focusedEqId);
+    if (eq?.latitude && eq?.longitude) mapInstanceRef.current.flyTo([eq.latitude, eq.longitude], 6, { duration: 1.5 });
+  }, [focusedEqId, earthquakes]);
+
   return (
-    <div style={{ position: 'relative', width: '100%', height: '100%' }}>
-      <div style={{ position: 'absolute', top: 10, right: 10, zIndex: 10, display: 'flex', gap: 4 }}>
-        {views.map((v, i) => <button key={i} onClick={() => setViewIdx(i)} style={{ padding: '5px 10px', borderRadius: 4, border: viewIdx === i ? '2px solid #f59e0b' : '1px solid #1e3a5f', background: viewIdx === i ? '#f59e0b22' : '#050b18cc', color: viewIdx === i ? '#fbbf24' : '#64748b', fontSize: 9, fontWeight: 700, cursor: 'pointer', fontFamily: "'JetBrains Mono', monospace", letterSpacing: 1 }}>{v.name}</button>)}
-      </div>
-      <svg viewBox={views[viewIdx].vb} style={{ width: '100%', height: '100%', background: 'linear-gradient(180deg,#0a1628,#0d1f3c,#0a1628)', transition: 'all 0.5s ease' }}>
-        <defs><radialGradient id="gr" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" /><stop offset="100%" stopColor="#ef4444" stopOpacity="0" /></radialGradient><radialGradient id="gy" cx="50%" cy="50%" r="50%"><stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" /><stop offset="100%" stopColor="#f59e0b" stopOpacity="0" /></radialGradient></defs>
-        {landPaths.map(p => <path key={p.key} d={p.d} fill="#0d2847" stroke="#2d6a9f" strokeWidth="0.8" />)}
-        {[-60, -30, 0, 30, 60].map(l => <line key={l} x1={0} y1={toY(l)} x2={900} y2={toY(l)} stroke="#1e3a5f" strokeWidth="0.5" strokeDasharray="4,4" />)}
-        {[-150, -120, -90, -60, 90, 120, 150, 180].map(l => <line key={`lo${l}`} x1={toX(l)} y1={0} x2={toX(l)} y2={500} stroke="#1e3a5f" strokeWidth="0.5" strokeDasharray="4,4" />)}
-        <path d="M 255,195 L 250,210 248,230 245,250 242,270 240,290 238,310 236,330 234,340 236,350 240,360 245,370" stroke="#f59e0b" strokeWidth="2.5" fill="none" opacity="0.5" />
-        <text x={238} y={238} fill="#f59e0b" fontSize="10" fontWeight="bold" opacity="0.8">PERU</text>
-        {buoys.map(b => { const bx = toX(b.longitude), by = toY(b.latitude), c = b.status === 'alert' ? '#ef4444' : b.status === 'warning' ? '#f59e0b' : '#22c55e'; return <g key={b.id}>{b.status !== 'normal' && <circle cx={bx} cy={by} r={16} fill={b.status === 'alert' ? "url(#gr)" : "url(#gy)"}><animate attributeName="r" values="12;20;12" dur="1.5s" repeatCount="indefinite" /></circle>}<circle cx={bx} cy={by} r={5} fill={c} stroke="#fff" strokeWidth="1.5" /><text x={bx + 8} y={by + 4} fill="#fbbf24" fontSize="7" fontFamily="monospace" fontWeight="bold">{b.name?.replace('DART ', '').substring(0, 12)}</text></g>; })}
-        {earthquakes.slice(0, 30).map((eq, i) => { const ex = toX(eq.longitude), ey = toY(eq.latitude), r = Math.max(3, (eq.magnitude || 0) * 2), c = sevColor(eq.severity), d = eq.severity === 'critical' || eq.severity === 'warning', focused = eq.id === focusedEqId; return <g key={eq.id} opacity={1 - i * 0.02} onClick={focused ? onClearFocus : undefined} style={focused ? {cursor:'pointer'} : {}}>{eq.severity === 'critical' && <circle cx={ex} cy={ey} r={r * 4} fill="url(#gr)"><animate attributeName="r" values={`${r * 3};${r * 6};${r * 3}`} dur="1s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.8;0.2;0.8" dur="1s" repeatCount="indefinite" /></circle>}{eq.severity === 'warning' && <circle cx={ex} cy={ey} r={r * 3} fill="url(#gy)"><animate attributeName="r" values={`${r * 2};${r * 4};${r * 2}`} dur="1.5s" repeatCount="indefinite" /></circle>}{focused && <circle cx={ex} cy={ey} r={r * 5} fill="none" stroke="#ffffff" strokeWidth="1.5" opacity="0.9"><animate attributeName="r" values={`${r * 4};${r * 7};${r * 4}`} dur="0.8s" repeatCount="indefinite" /><animate attributeName="opacity" values="0.9;0.2;0.9" dur="0.8s" repeatCount="indefinite" /></circle>}<circle cx={ex} cy={ey} r={r} fill={c} opacity="0.8">{d && <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite" />}</circle>{(eq.magnitude >= 4.5 || focused) && <text x={ex + r + 3} y={ey + 3} fill={focused ? '#ffffff' : c} fontSize={focused ? '10' : '8'} fontWeight="bold" fontFamily="monospace">M{eq.magnitude}</text>}</g>; })}
-        {viewIdx === 0 && <text x={450} y={22} fill="#fbbf24" fontSize="12" fontWeight="bold" textAnchor="middle" fontFamily="monospace">MONITOREO SISMICO - DATOS EN VIVO</text>}
-      </svg>
-    </div>
+    <>
+      <style>{`@keyframes pulse-map{0%,100%{transform:scale(1.5);opacity:0.35}50%{transform:scale(2.8);opacity:0.08}}.cnat-map-tooltip{background:#0d1a2e!important;border:1px solid #1e3a5f!important;border-radius:6px!important;color:#e2e8f0!important;padding:8px 12px!important;box-shadow:0 4px 20px rgba(0,0,0,0.6)!important}.leaflet-control-zoom a{background:#0d1a2e!important;color:#fbbf24!important;border-color:#1e3a5f!important}.leaflet-control-zoom a:hover{background:#1e3a5f!important}.leaflet-control-attribution{background:#0d1a2ecc!important;color:#475569!important;font-size:9px!important}`}</style>
+      <div ref={mapRef} style={{ width:'100%', height:'100%', background:'#060B18' }} />
+    </>
   );
 }
 
@@ -647,19 +688,18 @@ export default function App() {
       {/* ── CONTENIDO ── */}
       <div style={{
         display: 'grid',
-        gridTemplateColumns: fullWidthTabs.has(tab) ? '1fr' : '1fr 420px',
+        gridTemplateColumns: fullWidthTabs.has(tab) ? '1fr' : tab === 'mapa' ? '1fr 200px 200px 240px' : '1fr 420px',
         gap: 0,
         height: 'calc(100vh - 220px)'
       }}>
         {/* Columna principal */}
         <div style={{ padding: fullWidthTabs.has(tab) ? 0 : 12, overflow: 'auto', height: '100%' }}>
 
-          {/* ══ TAB MAPA: ARIA arriba + Mapa grande ══ */}
+          {/* ══ TAB MAPA: Leaflet full height ══ */}
           {tab === 'mapa' && (
-            <div style={{ display:'flex', flexDirection:'column', gap:6, height:'100%' }}>
-              <AutoReport data={data} />
-              <div style={{ flex:1, borderRadius:10, overflow:'hidden', border:'2px solid #1e3a5f', minHeight:0 }}>
-                <PacificMap earthquakes={eq} buoys={bu} focusedEqId={focusedEqId} onClearFocus={clearFocus} />
+            <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
+              <div style={{ flex:1, overflow:'hidden', minHeight:0 }}>
+                <PacificMapLeaflet earthquakes={eq} buoys={bu} focusedEqId={focusedEqId} onClearFocus={clearFocus} />
               </div>
               <MapLegend />
             </div>
@@ -720,17 +760,50 @@ export default function App() {
           {tab === 'usuarios' && isAdmin && <UsersTab />}
         </div>
 
-        {/* ── SIDEBAR DERECHO: Resumen + Feed en paralelo ── */}
-        {!fullWidthTabs.has(tab) && (
+        {/* ── SIDEBAR: 4 columnas verticales en MAPA, 1 sidebar en resto ── */}
+        {!fullWidthTabs.has(tab) && tab === 'mapa' && (
+          <>
+            {/* Col 2: Resumen Numérico */}
+            <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', overflow:'auto', display:'flex', flexDirection:'column' }}>
+              <StatsSummary earthquakes={eq} alerts={al} buoys={bu} onFocus={focusEq} />
+            </div>
+
+            {/* Col 3: Feed Sísmico */}
+            <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', overflow:'auto', padding:12, display:'flex', flexDirection:'column' }}>
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+                <h3 style={{ fontSize:11, color:'#fbbf24', letterSpacing:2, fontWeight:700 }}>FEED SISMICO</h3>
+                <div style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', animation:'blink 2s infinite' }} />
+              </div>
+              {eq.slice(0,20).map(e => {
+                const c = sevColor(e.severity), isFocused = e.id === focusedEqId;
+                return (
+                  <div key={e.id} onClick={()=>focusEq(e.id)} style={{ padding:'6px 8px', borderRadius:6, marginBottom:4, borderLeft:`3px solid ${c}`, background:isFocused?'#1e3a5f44':'#0d1a2e44', cursor:'pointer', outline:isFocused?`1px solid ${c}`:'none', transition:'background 0.2s' }} title="Ver en mapa">
+                    <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ fontSize:13, fontWeight:700, color:c, fontFamily:"'Orbitron'" }}>M{e.magnitude}</span><span style={{ fontSize:8, color:'#94a3b8' }}>{new Date(e.event_time).toLocaleTimeString('es-PE')}</span></div>
+                    <div style={{ fontSize:9, color:'#cbd5e1', marginTop:1 }}>{e.place}</div>
+                    <div style={{ display:'flex', gap:6, marginTop:1 }}><span style={{ fontSize:8, color:'#94a3b8' }}>Prof:{e.depth_km}km</span><span style={{ fontSize:8, color:'#94a3b8' }}>{e.source_id?.toUpperCase()}</span></div>
+                  </div>
+                );
+              })}
+              <div style={{ marginTop:'auto', borderTop:'1px solid #1e3a5f', paddingTop:8, display:'flex', justifyContent:'space-between' }}>
+                <span style={{ fontSize:9, color:'#f59e0b', fontWeight:700 }}>MICROHELP v2.0</span>
+                <span style={{ fontSize:9, color:'#22c55e', fontWeight:700 }}>DATOS REALES</span>
+              </div>
+            </div>
+
+            {/* Col 4: ARIA Informe */}
+            <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', overflow:'auto', padding:10 }}>
+              <AutoReport data={data} />
+            </div>
+          </>
+        )}
+
+        {/* Sidebar normal para otros tabs */}
+        {!fullWidthTabs.has(tab) && tab !== 'mapa' && (
           <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', display:'flex', flexDirection:'column', overflow:'hidden' }}>
             <div style={{ display:'flex', flex:1, overflow:'hidden' }}>
-
-              {/* Resumen Numérico */}
               <div style={{ flex:1, borderRight:'1px solid #1e3a5f', overflow:'auto' }}>
                 <StatsSummary earthquakes={eq} alerts={al} buoys={bu} onFocus={focusEq} />
               </div>
-
-              {/* Feed Sísmico */}
               <div style={{ flex:1, overflow:'auto', padding:12 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
                   <h3 style={{ fontSize:12, color:'#fbbf24', letterSpacing:2, fontWeight:700 }}>FEED SISMICO</h3>
@@ -748,7 +821,6 @@ export default function App() {
                 })}
               </div>
             </div>
-
             <div style={{ borderTop:'1px solid #1e3a5f', padding:'8px 12px', display:'flex', justifyContent:'space-between' }}>
               <span style={{ fontSize:10, color:'#f59e0b', fontWeight:700 }}>MICROHELP v2.0</span>
               <span style={{ fontSize:10, color:'#22c55e', fontWeight:700 }}>DATOS REALES</span>
