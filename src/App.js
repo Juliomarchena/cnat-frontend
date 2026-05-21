@@ -774,7 +774,7 @@ export default function App() {
                 <h3 style={{ fontSize:11, color:'#fbbf24', letterSpacing:2, fontWeight:700 }}>FEED SISMICO</h3>
                 <div style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', animation:'blink 2s infinite' }} />
               </div>
-              {eq.slice(0,20).map(e => {
+              {[...eq].sort((a,b) => b.magnitude - a.magnitude).slice(0,100).map(e => {
                 const c = sevColor(e.severity), isFocused = e.id === focusedEqId;
                 return (
                   <div key={e.id} onClick={()=>focusEq(e.id)} style={{ padding:'6px 8px', borderRadius:6, marginBottom:4, borderLeft:`3px solid ${c}`, background:isFocused?'#1e3a5f44':'#0d1a2e44', cursor:'pointer', outline:isFocused?`1px solid ${c}`:'none', transition:'background 0.2s' }} title="Ver en mapa">
@@ -809,7 +809,7 @@ export default function App() {
                   <h3 style={{ fontSize:12, color:'#fbbf24', letterSpacing:2, fontWeight:700 }}>FEED SISMICO</h3>
                   <div style={{ width:8, height:8, borderRadius:'50%', background:'#22c55e', animation:'blink 2s infinite' }} />
                 </div>
-                {eq.slice(0,15).map(e => {
+                {[...eq].sort((a,b) => b.magnitude - a.magnitude).slice(0,100).map(e => {
                   const c = sevColor(e.severity), isFocused = e.id === focusedEqId;
                   return (
                     <div key={e.id} onClick={()=>focusEq(e.id)} style={{ padding:'7px 10px', borderRadius:6, marginBottom:4, borderLeft:`4px solid ${c}`, background:isFocused?'#1e3a5f44':'#0d1a2e44', cursor:'pointer', outline:isFocused?`1px solid ${c}`:'none', transition:'background 0.2s' }} title="Ver en mapa">
