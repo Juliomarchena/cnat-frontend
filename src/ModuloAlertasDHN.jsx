@@ -408,6 +408,7 @@ function LevelSection({ level, earthquakes, defaultOpen = true, onCardClick }) {
    ───────────────────────────────────────────────────────────── */
 export default function ModuloAlertasDHN({ earthquakes = [], alerts = [], kpis = {} }) {
   const [selectedEq, setSelectedEq] = useState(null);
+  const [listModal, setListModal] = useState(null); // { title, color, items }
 
   const grouped = useMemo(() => {
     const result = { ALARMA: [], ALERTA: [], INFORMACION: [], NO_APLICA: [] };
@@ -438,9 +439,72 @@ export default function ModuloAlertasDHN({ earthquakes = [], alerts = [], kpis =
   return (
     <div style={{ padding: '4px 8px' }}>
 
-      {/* MODAL */}
+      {/* MODAL DETALLE SISMO */}
       {selectedEq && (
         <EarthquakeModal eq={selectedEq} onClose={() => setSelectedEq(null)} />
+      )}
+
+      {/* MODAL LISTA POR NIVEL */}
+      {listModal && (
+        <div
+          onClick={() => setListModal(null)}
+          style={{
+            position: 'fixed', inset: 0,
+            background: 'rgba(0,0,0,0.8)',
+            zIndex: 9998,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            padding: 20, backdropFilter: 'blur(4px)',
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              background: '#0a1628',
+              border: `2px solid ${listModal.color}66`,
+              borderRadius: 12, padding: 24,
+              maxWidth: 600, width: '100%',
+              maxHeight: '80vh', overflowY: 'auto',
+              boxShadow: `0 0 40px ${listModal.color}33`,
+              position: 'relative',
+            }}
+          >
+            <div style={{
+              position: 'absolute', top: 0, left: 0, right: 0,
+              height: 4, background: listModal.color, borderRadius: '12px 12px 0 0',
+            }} />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16, paddingTop: 8 }}>
+              <div>
+                <div style={{ fontSize: 10, color: '#64748b', letterSpacing: 2 }}>EVENTOS CLASIFICADOS</div>
+                <div style={{ fontSize: 16, fontWeight: 700, color: listModal.color, fontFamily: "'Orbitron', monospace", letterSpacing: 2 }}>
+                  {listModal.title}
+                </div>
+              </div>
+              <button
+                onClick={() => setListModal(null)}
+                style={{
+                  background: 'transparent', border: '1px solid #1e3a5f',
+                  color: '#94a3b8', borderRadius: 6, padding: '4px 10px',
+                  cursor: 'pointer', fontSize: 12,
+                }}
+              >
+                ✕ CERRAR
+              </button>
+            </div>
+            {listModal.items.length === 0 ? (
+              <div style={{ textAlign: 'center', color: '#64748b', padding: 30 }}>
+                Sin eventos en esta categoría
+              </div>
+            ) : (
+              listModal.items.map((eq) => (
+                <EarthquakeCard
+                  key={eq.id}
+                  eq={eq}
+                  onClick={(eq) => { setListModal(null); setSelectedEq(eq); }}
+                />
+              ))
+            )}
+          </div>
+        </div>
       )}
 
       {/* ═══ ENCABEZADO ═══ */}
@@ -473,16 +537,23 @@ export default function ModuloAlertasDHN({ earthquakes = [], alerts = [], kpis =
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
           {[
-            { label: 'ALARMA',          value: dhnAlarma,  color: DHN_COLORS.ALARMA },
-            { label: 'ALERTA',          value: dhnAlerta,  color: DHN_COLORS.ALERTA },
-            { label: 'INFORMACIÓN',     value: dhnInfo,    color: DHN_COLORS.INFORMACION },
-            { label: 'EVENTOS EN PERÚ', value: localCount, color: '#fbbf24' },
+            { label: 'ALARMA',          value: dhnAlarma,  color: DHN_COLORS.ALARMA,      items: grouped.ALARMA },
+            { label: 'ALERTA',          value: dhnAlerta,  color: DHN_COLORS.ALERTA,      items: grouped.ALERTA },
+            { label: 'INFORMACIÓN',     value: dhnInfo,    color: DHN_COLORS.INFORMACION, items: grouped.INFORMACION },
+            { label: 'EVENTOS EN PERÚ', value: localCount, color: '#fbbf24',              items: localQuakes },
           ].map((kpi) => (
-            <div key={kpi.label} style={{
-              background: '#070e1f', border: `1px solid ${kpi.color}44`,
-              borderRadius: 6, padding: 10, textAlign: 'center',
-              position: 'relative', overflow: 'hidden',
-            }}>
+            <div
+              key={kpi.label}
+              onClick={() => setListModal({ title: kpi.label, color: kpi.color, items: kpi.items })}
+              style={{
+                background: '#070e1f', border: `1px solid ${kpi.color}44`,
+                borderRadius: 6, padding: 10, textAlign: 'center',
+                position: 'relative', overflow: 'hidden',
+                cursor: 'pointer', transition: 'border-color 0.2s',
+              }}
+              onMouseEnter={(e) => e.currentTarget.style.borderColor = `${kpi.color}99`}
+              onMouseLeave={(e) => e.currentTarget.style.borderColor = `${kpi.color}44`}
+            >
               <div style={{
                 position: 'absolute', top: 0, left: 0, right: 0,
                 height: 3, background: kpi.color,
