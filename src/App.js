@@ -650,6 +650,89 @@ function UsersTab() {
   );
 }
 
+/* ═══ VIGÍA RESUMEN CRT ═══ */
+function VigiaResumenCRT({ summary }) {
+  const [displayText, setDisplayText] = useState('');
+  const [typing, setTyping] = useState(false);
+  const timerRef = useRef(null);
+  const prevIdRef = useRef(null);
+
+  const fechaEmision = summary?.generated_at
+    ? new Date(summary.generated_at).toLocaleString('es-PE', {
+        weekday:'long', day:'2-digit', month:'long', year:'numeric',
+        hour:'2-digit', minute:'2-digit', second:'2-digit'
+      }).toUpperCase()
+    : '';
+
+  const textoCompleto = summary?.summary_text
+    ? `> BOLETÍN VIGÍA — ${fechaEmision}\n> ARTÍCULOS PROCESADOS: ${summary.articles_count} | SCORE: ${summary.relevance_score}/10\n${'─'.repeat(80)}\n\n${summary.summary_text.substring(0, 900)}${summary.summary_text.length > 900 ? '\n\n> [RESUMEN TRUNCADO — VER MÓDULO VIGÍA (IA) PARA DETALLE COMPLETO]' : ''}`
+    : '';
+
+  useEffect(() => {
+    if (!textoCompleto || summary?.id === prevIdRef.current) return;
+    prevIdRef.current = summary?.id;
+
+    // Borrar texto anterior y retipear
+    setDisplayText('');
+    setTyping(true);
+    if (timerRef.current) clearInterval(timerRef.current);
+
+    let i = 0;
+    // Pequeño delay antes de empezar a tipear
+    setTimeout(() => {
+      timerRef.current = setInterval(() => {
+        i++;
+        setDisplayText(textoCompleto.substring(0, i));
+        if (i >= textoCompleto.length) {
+          clearInterval(timerRef.current);
+          setTyping(false);
+        }
+      }, 18); // velocidad de tipeo
+    }, 400);
+
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, [summary?.id, textoCompleto]);
+
+  const scoreColor = summary?.relevance_score >= 6 ? '#ff4444' : summary?.relevance_score >= 4 ? '#ffaa00' : '#00ff00';
+
+  return (
+    <div style={{ marginTop:16, background:'#000000', border:'2px solid #00ff0033', borderRadius:8, padding:16, position:'relative', overflow:'hidden', boxShadow:'inset 0 0 60px rgba(0,255,0,0.03), 0 0 15px rgba(0,255,0,0.08)' }}>
+      {/* Scanlines */}
+      <div style={{ position:'absolute', top:0, left:0, right:0, bottom:0, background:'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.012) 2px, rgba(0,255,0,0.012) 4px)', pointerEvents:'none', zIndex:1 }} />
+      <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#00ff0066,transparent)', zIndex:2 }} />
+
+      <div style={{ position:'relative', zIndex:3, fontFamily:"'Courier New', Courier, monospace" }}>
+
+        {/* Header */}
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, paddingBottom:8, borderBottom:'1px solid #00ff0022' }}>
+          <div style={{ display:'flex', alignItems:'center', gap:10 }}>
+            <span style={{ fontSize:13, color:'#00ff00', fontWeight:700, letterSpacing:3, textShadow:'0 0 8px rgba(0,255,0,0.6)' }}>{'>'} VIGÍA::ESCUCHA_SOCIAL</span>
+            <div style={{ width:8, height:8, borderRadius:'50%', background:'#00ff00', animation:'blink 1.5s infinite', boxShadow:'0 0 6px #00ff00' }} />
+            {typing && <span style={{ fontSize:9, color:'#00ff0088', animation:'blink 0.4s infinite' }}>TRANSMITIENDO...</span>}
+          </div>
+          <div style={{ fontSize:9, color:'#00ff0066' }}>
+            SCORE: <span style={{ color:scoreColor, fontWeight:700 }}>{summary?.relevance_score}/10</span>
+          </div>
+        </div>
+
+        {/* Texto con typewriter */}
+        <div style={{ fontSize:12, color:'#00cc00', lineHeight:1.9, whiteSpace:'pre-wrap', textShadow:'0 0 4px rgba(0,255,0,0.2)', letterSpacing:0.3, minHeight:80 }}>
+          {displayText || <span style={{ color:'#00ff0044' }}>{'> INICIANDO TRANSMISIÓN...'}</span>}
+          {typing && <span style={{ animation:'blink 0.4s infinite', color:'#00ff00', textShadow:'0 0 8px #00ff00' }}>█</span>}
+          {!typing && displayText && <span style={{ animation:'blink 0.8s infinite', color:'#00ff0088' }}>█</span>}
+        </div>
+
+        {/* Footer */}
+        <div style={{ marginTop:10, paddingTop:8, borderTop:'1px solid #00ff0015', display:'flex', justifyContent:'space-between', fontSize:9, color:'#00ff0033' }}>
+          <span>CNAT::VIGÍA::v2.0 | Claude AI</span>
+          <span>BBC MUNDO · NYT ESPAÑOL · WASHINGTON POST</span>
+          <span>AUTO: 06:00 UTC DIARIO</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 /* ═══ FUENTES TAB v3 ═══ */
 function FuentesTab({ sr = [], data }) {
   const [ejecutandoFetch, setEjecutandoFetch] = useState(false);
@@ -863,42 +946,9 @@ function FuentesTab({ sr = [], data }) {
         );
       })}
 
-      {/* ── Último resumen VIGÍA — estética CRT ── */}
+      {/* ── Último resumen VIGÍA — CRT con typewriter ── */}
       {data?.news_summary && (
-        <div style={{ marginTop:16, background:'#000000', border:'2px solid #00ff0033', borderRadius:8, padding:16, position:'relative', overflow:'hidden', boxShadow:'inset 0 0 60px rgba(0,255,0,0.03), 0 0 15px rgba(0,255,0,0.08)' }}>
-          {/* Scanlines */}
-          <div style={{ position:'absolute', top:0, left:0, right:0, bottom:0, background:'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.012) 2px, rgba(0,255,0,0.012) 4px)', pointerEvents:'none', zIndex:1 }} />
-          {/* Barra superior */}
-          <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#00ff0066,transparent)', zIndex:2 }} />
-
-          <div style={{ position:'relative', zIndex:3, fontFamily:"'Courier New', Courier, monospace" }}>
-            {/* Header CRT */}
-            <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, paddingBottom:8, borderBottom:'1px solid #00ff0022' }}>
-              <div style={{ display:'flex', alignItems:'center', gap:10 }}>
-                <span style={{ fontSize:13, color:'#00ff00', fontWeight:700, letterSpacing:3, textShadow:'0 0 8px rgba(0,255,0,0.6)' }}>{'>'} VIGÍA::ESCUCHA_SOCIAL</span>
-                <div style={{ width:8, height:8, borderRadius:'50%', background:'#00ff00', animation:'blink 1.5s infinite', boxShadow:'0 0 6px #00ff00' }} />
-              </div>
-              <div style={{ display:'flex', gap:16, fontSize:10, color:'#00ff0088' }}>
-                <span>ARTÍCULOS: <span style={{ color:'#00ff00', fontWeight:700 }}>{data.news_summary.articles_count}</span></span>
-                <span>SCORE: <span style={{ color: data.news_summary.relevance_score >= 6 ? '#ff4444' : data.news_summary.relevance_score >= 4 ? '#ffaa00' : '#00ff00', fontWeight:700 }}>{data.news_summary.relevance_score}/10</span></span>
-                <span>GEN: <span style={{ color:'#00ff00' }}>{new Date(data.news_summary.generated_at).toLocaleTimeString('es-PE')}</span></span>
-              </div>
-            </div>
-
-            {/* Contenido del resumen */}
-            <div style={{ fontSize:12, color:'#00cc00', lineHeight:1.8, whiteSpace:'pre-wrap', textShadow:'0 0 4px rgba(0,255,0,0.25)', letterSpacing:0.3 }}>
-              {'> '}{data.news_summary.summary_text?.substring(0, 800)}{data.news_summary.summary_text?.length > 800 ? '\n> [...]' : ''}
-              <span style={{ animation:'blink 0.6s infinite', color:'#00ff00' }}>█</span>
-            </div>
-
-            {/* Footer CRT */}
-            <div style={{ marginTop:10, paddingTop:8, borderTop:'1px solid #00ff0015', display:'flex', justifyContent:'space-between', fontSize:9, color:'#00ff0044' }}>
-              <span>CNAT::VIGÍA::v2.0 | Claude AI</span>
-              <span>FUENTES: BBC MUNDO · NYT ESPAÑOL · WASHINGTON POST</span>
-              <span>ACTUALIZACIÓN DIARIA 06:00 UTC</span>
-            </div>
-          </div>
-        </div>
+        <VigiaResumenCRT summary={data.news_summary} />
       )}
     </div>
   );
