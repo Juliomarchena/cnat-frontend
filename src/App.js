@@ -651,11 +651,25 @@ function UsersTab() {
 }
 
 /* ═══ VIGÍA RESUMEN CRT ═══ */
-function VigiaResumenCRT({ summary }) {
+function VigiaResumenCRT({ summary, procesando = false }) {
   const [displayText, setDisplayText] = useState('');
-  const [typing, setTyping] = useState(false);
-  const timerRef = useRef(null);
+  const [typing, setTyping]           = useState(false);
+  const [dots, setDots]               = useState('');
+  const timerRef  = useRef(null);
+  const dotsRef   = useRef(null);
   const prevIdRef = useRef(null);
+
+  // Puntos suspensivos animados mientras procesa
+  useEffect(() => {
+    if (procesando) {
+      setDisplayText(''); setTyping(false);
+      if (timerRef.current) clearInterval(timerRef.current);
+      dotsRef.current = setInterval(() => setDots(d => d.length >= 6 ? '' : d + '.'), 300);
+    } else {
+      clearInterval(dotsRef.current); setDots('');
+    }
+    return () => clearInterval(dotsRef.current);
+  }, [procesando]);
 
   const fechaEmision = summary?.generated_at
     ? new Date(summary.generated_at).toLocaleString('es-PE', {
@@ -665,61 +679,62 @@ function VigiaResumenCRT({ summary }) {
     : '';
 
   const textoCompleto = summary?.summary_text
-    ? `> BOLETÍN VIGÍA — ${fechaEmision}\n> ARTÍCULOS: ${summary.articles_count} | SCORE: ${summary.relevance_score}/10\n${'─'.repeat(60)}\n${summary.summary_text.substring(0, 900)}${summary.summary_text.length > 900 ? '\n[...ver VIGÍA (IA) para detalle completo]' : ''}`
+    ? `> BOLETÍN VIGÍA -- ${fechaEmision}\n> ARTÍCULOS: ${summary.articles_count} | SCORE: ${summary.relevance_score}/10\n${'─'.repeat(60)}\n${summary.summary_text.substring(0, 900)}${summary.summary_text.length > 900 ? '\n[...ver VIGÍA (IA) para detalle completo]' : ''}`
     : '';
 
   useEffect(() => {
-    if (!textoCompleto || summary?.id === prevIdRef.current) return;
+    if (!textoCompleto || summary?.id === prevIdRef.current || procesando) return;
     prevIdRef.current = summary?.id;
-
-    // Borrar texto anterior y retipear
-    setDisplayText('');
-    setTyping(true);
+    setDisplayText(''); setTyping(true);
     if (timerRef.current) clearInterval(timerRef.current);
-
     let i = 0;
-    // Pequeño delay antes de empezar a tipear
     setTimeout(() => {
       timerRef.current = setInterval(() => {
         i++;
         setDisplayText(textoCompleto.substring(0, i));
-        if (i >= textoCompleto.length) {
-          clearInterval(timerRef.current);
-          setTyping(false);
-        }
-      }, 10); // velocidad de tipeo más rápida
+        if (i >= textoCompleto.length) { clearInterval(timerRef.current); setTyping(false); }
+      }, 10);
     }, 200);
-
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
-  }, [summary?.id, textoCompleto]);
+  }, [summary?.id, textoCompleto, procesando]);
 
   const scoreColor = summary?.relevance_score >= 6 ? '#ff4444' : summary?.relevance_score >= 4 ? '#ffaa00' : '#00ff00';
+  const borderColor = procesando ? '#ffaa0044' : '#00ff0033';
+  const dotColor    = procesando ? '#ffaa00'   : '#00ff00';
 
   return (
-    <div style={{ marginTop:16, background:'#000000', border:'2px solid #00ff0033', borderRadius:8, padding:16, position:'relative', overflow:'hidden', boxShadow:'inset 0 0 60px rgba(0,255,0,0.03), 0 0 15px rgba(0,255,0,0.08)' }}>
-      {/* Scanlines */}
+    <div style={{ marginTop:16, background:'#000000', border:`2px solid ${borderColor}`, borderRadius:8, padding:16, position:'relative', overflow:'hidden', boxShadow:`inset 0 0 60px rgba(0,255,0,0.03), 0 0 15px rgba(0,255,0,0.08)` }}>
       <div style={{ position:'absolute', top:0, left:0, right:0, bottom:0, background:'repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,255,0,0.012) 2px, rgba(0,255,0,0.012) 4px)', pointerEvents:'none', zIndex:1 }} />
       <div style={{ position:'absolute', top:0, left:0, right:0, height:2, background:'linear-gradient(90deg,transparent,#00ff0066,transparent)', zIndex:2 }} />
 
       <div style={{ position:'relative', zIndex:3, fontFamily:"'Courier New', Courier, monospace" }}>
-
         {/* Header */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:10, paddingBottom:8, borderBottom:'1px solid #00ff0022' }}>
           <div style={{ display:'flex', alignItems:'center', gap:10 }}>
             <span style={{ fontSize:13, color:'#00ff00', fontWeight:700, letterSpacing:3, textShadow:'0 0 8px rgba(0,255,0,0.6)' }}>{'>'} VIGÍA::ESCUCHA_SOCIAL</span>
-            <div style={{ width:8, height:8, borderRadius:'50%', background:'#00ff00', animation:'blink 1.5s infinite', boxShadow:'0 0 6px #00ff00' }} />
-            {typing && <span style={{ fontSize:9, color:'#00ff0088', animation:'blink 0.4s infinite' }}>TRANSMITIENDO...</span>}
+            <div style={{ width:8, height:8, borderRadius:'50%', background:dotColor, animation:'blink 1.5s infinite', boxShadow:`0 0 6px ${dotColor}` }} />
+            {(typing || procesando) && <span style={{ fontSize:9, color:`${dotColor}88`, animation:'blink 0.4s infinite' }}>{procesando ? 'PROCESANDO...' : 'TRANSMITIENDO...'}</span>}
           </div>
-          <div style={{ fontSize:9, color:'#00ff0066' }}>
-            SCORE: <span style={{ color:scoreColor, fontWeight:700 }}>{summary?.relevance_score}/10</span>
-          </div>
+          {!procesando && summary && <div style={{ fontSize:9, color:'#00ff0066' }}>SCORE: <span style={{ color:scoreColor, fontWeight:700 }}>{summary.relevance_score}/10</span></div>}
         </div>
 
-        {/* Texto con typewriter */}
-        <div style={{ fontSize:12, color:'#00cc00', lineHeight:1.4, whiteSpace:'pre-wrap', textShadow:'0 0 4px rgba(0,255,0,0.2)', letterSpacing:0.3, minHeight:80 }}>
-          {displayText || <span style={{ color:'#00ff0044' }}>{'> INICIANDO TRANSMISIÓN...'}</span>}
-          {typing && <span style={{ animation:'blink 0.4s infinite', color:'#00ff00', textShadow:'0 0 8px #00ff00' }}>█</span>}
-          {!typing && displayText && <span style={{ animation:'blink 0.8s infinite', color:'#00ff0088' }}>█</span>}
+        {/* Contenido */}
+        <div style={{ fontSize:12, color:'#00cc00', lineHeight:1.4, whiteSpace:'pre-wrap', textShadow:'0 0 4px rgba(0,255,0,0.2)', letterSpacing:0.3, minHeight:70 }}>
+          {procesando ? (
+            <div style={{ paddingTop:8 }}>
+              <div style={{ color:'#ffaa00', fontSize:14, fontWeight:700, letterSpacing:2, textShadow:'0 0 10px rgba(255,170,0,0.6)', animation:'blink 1s infinite' }}>
+                {`> PROCESANDO${dots}`}
+              </div>
+              <div style={{ color:'#ffaa0088', fontSize:11, marginTop:8 }}>{'> Capturando noticias y generando análisis...'}</div>
+              <div style={{ color:'#ffaa0055', fontSize:10, marginTop:4 }}>{'> Por favor espere un momento'}</div>
+            </div>
+          ) : (
+            <>
+              {displayText || <span style={{ color:'#00ff0033' }}>{'> INICIANDO TRANSMISIÓN...'}</span>}
+              {typing  && <span style={{ animation:'blink 0.4s infinite', color:'#00ff00', textShadow:'0 0 8px #00ff00' }}>█</span>}
+              {!typing && displayText && <span style={{ animation:'blink 0.8s infinite', color:'#00ff0066' }}>█</span>}
+            </>
+          )}
         </div>
 
         {/* Footer */}
@@ -948,7 +963,7 @@ function FuentesTab({ sr = [], data }) {
 
       {/* ── Último resumen VIGÍA — CRT con typewriter ── */}
       {data?.news_summary && (
-        <VigiaResumenCRT summary={data.news_summary} />
+        <VigiaResumenCRT summary={data.news_summary} procesando={ejecutandoNoticias || ejecutandoResumen} />
       )}
     </div>
   );
