@@ -462,7 +462,8 @@ function AriaAssistant({ data }) {
 
   const buildCtx = () => {
     const k = data?.kpis || {}, e = (data?.earthquakes || []).slice(0, 20), a = data?.alerts || [], b = data?.buoys || [];
-    return `Eres ARIA, asistente IA del CNAT de la Marina de Guerra del Peru. Responde en espanol profesional.\nDATOS (${new Date().toLocaleString('es-PE')}): Sismos:${k.total_earthquakes||0} Alertas:${k.active_alerts||0} Criticos:${k.critical_count||0} Boyas:${k.alert_buoys||0}/${k.total_buoys||0} Fuentes:${k.sources_online||0}/${k.total_sources||0} Riesgo:${k.risk_level||'BAJO'}\nM>=4.5:\n${e.filter(x=>x.magnitude>=4.5).map(x=>`M${x.magnitude}|${x.depth_km}km|${x.place}`).join('\n')||'Ninguno'}\nAlertas:\n${a.length>0?a.map(x=>x.title).join('\n'):'Sin alertas'}\nBoyas:\n${b.map(x=>`${x.name}:${x.status}`).join('\n')}\nUmbrales: M7.5+60km=ALARMA M7.0+100km=ALERTA M6.5+70km=ALERTA M6.0+100km=INFO`;
+    const ns = data?.news_summary;
+    return `Eres ARIA, asistente IA del CNAT de la Marina de Guerra del Peru. Responde en espanol profesional.\nDATOS (${new Date().toLocaleString('es-PE')}): Sismos:${k.total_earthquakes||0} Alertas:${k.active_alerts||0} Criticos:${k.critical_count||0} Boyas:${k.alert_buoys||0}/${k.total_buoys||0} Fuentes:${k.sources_online||0}/${k.total_sources||0} Riesgo:${k.risk_level||'BAJO'}\nM>=4.5:\n${e.filter(x=>x.magnitude>=4.5).map(x=>`M${x.magnitude}|${x.depth_km}km|${x.place}`).join('\n')||'Ninguno'}\nAlertas:\n${a.length>0?a.map(x=>x.title).join('\n'):'Sin alertas'}\nBoyas:\n${b.map(x=>`${x.name}:${x.status}`).join('\n')}\nUmbrales: M7.5+60km=ALARMA M7.0+100km=ALERTA M6.5+70km=ALERTA M6.0+100km=INFO${ns?`\nRESUMEN NOTICIAS VIGIA (${new Date(ns.generated_at).toLocaleString('es-PE')}): ${ns.summary_text?.substring(0,400)}`:''}`;
   };
 
   const send = async (t) => {
@@ -486,8 +487,6 @@ function AriaAssistant({ data }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-
-      {/* ── Header ARIA ── */}
       <div style={{ padding: 16, borderBottom: '2px solid #8b5cf6', background: '#0a1628' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{ width: 40, height: 40, borderRadius: '50%', background: 'linear-gradient(135deg,#8b5cf6,#6366f1)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, color: '#fff', fontWeight: 700 }}>A</div>
@@ -503,22 +502,9 @@ function AriaAssistant({ data }) {
           )}
         </div>
       </div>
-
-      {/* ── Pantalla inicial: descripción + consultas rápidas ── */}
       {messages.length === 0 && (
         <div style={{ padding: 16 }}>
-
-          {/* Descripción */}
-          <div style={{
-            background: '#000000',
-            border: '2px solid #8b5cf6',
-            borderRadius: 10,
-            padding: '16px 18px',
-            marginBottom: 18,
-            boxShadow: '0 0 18px rgba(139,92,246,0.4), inset 0 0 30px rgba(139,92,246,0.05)',
-            position: 'relative',
-            overflow: 'hidden'
-          }}>
+          <div style={{ background: '#000000', border: '2px solid #8b5cf6', borderRadius: 10, padding: '16px 18px', marginBottom: 18, boxShadow: '0 0 18px rgba(139,92,246,0.4), inset 0 0 30px rgba(139,92,246,0.05)', position: 'relative', overflow: 'hidden' }}>
             <div style={{ position:'absolute', top:0, left:0, width:'100%', height:2, background:'linear-gradient(90deg,#8b5cf6,#6366f1,#8b5cf6)' }} />
             <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
               <span style={{ fontSize:18 }}>⚠️</span>
@@ -541,8 +527,6 @@ function AriaAssistant({ data }) {
               </div>
             </div>
           </div>
-
-          {/* Consultas rápidas */}
           <div style={{ fontSize: 11, color: '#fbbf24', letterSpacing: 1.5, marginBottom: 10, fontWeight: 700 }}>CONSULTAS RAPIDAS</div>
           {prompts.map((p, i) => (
             <button key={i} onClick={() => send(p)} style={{ display: 'block', width: '100%', textAlign: 'left', padding: '10px 14px', marginBottom: 6, background: '#0d1a2e', border: '1px solid #1e3a5f66', borderRadius: 8, color: '#cbd5e1', fontSize: 12, cursor: 'pointer', fontFamily: 'inherit' }}
@@ -553,8 +537,6 @@ function AriaAssistant({ data }) {
           ))}
         </div>
       )}
-
-      {/* ── Mensajes ── */}
       <div style={{ flex: 1, overflow: 'auto', padding: 14 }}>
         {messages.map((m, i) => (
           <div key={i} style={{ marginBottom: 14, padding: 14, borderRadius: 8, background: m.role === 'user' ? '#1e3a5f22' : '#0d1a2e', borderLeft: m.role === 'user' ? '4px solid #f59e0b' : '4px solid #8b5cf6' }}>
@@ -568,8 +550,6 @@ function AriaAssistant({ data }) {
           </div>
         )}
       </div>
-
-      {/* ── Input ── */}
       <div style={{ padding: 14, borderTop: '2px solid #1e3a5f', display: 'flex', gap: 8 }}>
         <input value={input} onChange={e => setInput(e.target.value)} onKeyDown={e => e.key === 'Enter' && !loading && send(input)} placeholder="Consulta a ARIA..." disabled={loading} style={{ flex: 1, padding: '12px 16px', borderRadius: 8, border: '2px solid #1e3a5f', background: '#0a1628', color: '#fbbf24', fontSize: 13, fontFamily: 'inherit', outline: 'none' }} />
         <button onClick={() => send(input)} disabled={loading || !input.trim()} style={{ padding: '12px 24px', borderRadius: 8, border: 'none', background: loading ? '#334155' : '#6366f1', color: '#fff', fontSize: 13, fontWeight: 700, cursor: loading ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>{loading ? '...' : 'ENVIAR'}</button>
@@ -849,20 +829,95 @@ export default function App() {
             </div>
           )}
 
+          {/* ══════════════════════════════════════════
+              PESTAÑA FUENTES — FASE 2 ACTUALIZADA
+              ══════════════════════════════════════════ */}
           {tab === 'fuentes' && (
-            <div>
-              <h3 style={{ fontSize:14, color:'#fbbf24', letterSpacing:2, marginBottom:10 }}>20 FUENTES OFICIALES</h3>
-              {['sismo','alerta','boya','noticias'].map(t => (
-                <div key={t} style={{ marginBottom:14 }}>
-                  <div style={{ fontSize:12, fontWeight:700, color:'#f59e0b', letterSpacing:2, marginBottom:6 }}>{t==='sismo'?'SISMOLOGICAS':t==='alerta'?'CENTROS ALERTA':t==='boya'?'BOYAS':'NOTICIAS'}</div>
-                  {sr.filter(s=>s.source_type===t).map(s => (
-                    <div key={s.id} style={{ background:'#0d1a2e', borderRadius:6, padding:'10px 14px', display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:4 }}>
-                      <div style={{ display:'flex', alignItems:'center', gap:10 }}><div style={{ width:10, height:10, borderRadius:'50%', background:s.status==='active'?'#22c55e':'#ef4444' }} /><span style={{ fontSize:13, fontWeight:600, color:'#e2e8f0' }}>{s.name}</span><span style={{ fontSize:11, color:'#94a3b8' }}>{s.country}</span></div>
-                      <span style={{ fontSize:11, fontWeight:600, color:s.status==='active'?'#22c55e':'#ef4444' }}>{s.status==='active'?'ONLINE':'ERROR'}</span>
-                    </div>
-                  ))}
+            <div style={{ padding: 4 }}>
+
+              {/* Header con contadores */}
+              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
+                <h3 style={{ fontSize:14, color:'#fbbf24', letterSpacing:2, margin:0 }}>FUENTES DE INFORMACIÓN — CNAT</h3>
+                <div style={{ display:'flex', gap:16, fontSize:11 }}>
+                  <span style={{ color:'#22c55e' }}>🟢 ACTIVAS: <b>{sr.filter(s=>s.status==='active').length}</b></span>
+                  <span style={{ color:'#ef4444' }}>🔴 ERROR: <b>{sr.filter(s=>s.status==='error').length}</b></span>
+                  <span style={{ color:'#64748b' }}>⚫ PENDIENTES: <b>{sr.filter(s=>s.status==='pending').length}</b></span>
                 </div>
-              ))}
+              </div>
+
+              {/* Tabla por categoría */}
+              {['sismo','alerta','boya','noticias'].map(tipo => {
+                const fuentes = sr.filter(s => s.source_type === tipo);
+                if (!fuentes.length) return null;
+                const catLabel = tipo==='sismo'?'🔴 SISMOLÓGICAS':tipo==='alerta'?'🚨 CENTROS DE ALERTA':tipo==='boya'?'🌊 BOYAS / NIVEL DEL MAR':'📰 NOTICIAS / ESCUCHA SOCIAL';
+                return (
+                  <div key={tipo} style={{ marginBottom:20 }}>
+                    <div style={{ fontSize:11, fontWeight:700, color:'#f59e0b', letterSpacing:2, marginBottom:8, paddingBottom:4, borderBottom:'1px solid #1e3a5f' }}>{catLabel}</div>
+                    <div style={{ borderRadius:8, overflow:'hidden', border:'1px solid #1e3a5f44' }}>
+                      <table style={{ width:'100%', borderCollapse:'collapse', background:'#0d1a2e' }}>
+                        <thead>
+                          <tr style={{ background:'#0a1628' }}>
+                            {['Estado','Fuente','País','Alcance','Modo','Descripción','Último fetch'].map(h => (
+                              <th key={h} style={{ padding:'8px 12px', fontSize:9, fontWeight:700, color:'#64748b', textAlign:'left', borderBottom:'1px solid #1e3a5f', letterSpacing:1, whiteSpace:'nowrap' }}>{h}</th>
+                            ))}
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {fuentes.map((s, idx) => {
+                            const isActive  = s.status === 'active';
+                            const isError   = s.status === 'error';
+                            const stColor   = isActive ? '#22c55e' : isError ? '#ef4444' : '#64748b';
+                            const stLabel   = isActive ? 'ACTIVA' : isError ? 'ERROR' : 'PENDIENTE';
+                            const stDot     = isActive ? '🟢' : isError ? '🔴' : '⚫';
+                            const modeColor = s.fetch_mode === 'realtime' ? '#3b82f6' : s.fetch_mode === 'daily' ? '#8b5cf6' : '#475569';
+                            const modeLabel = s.fetch_mode === 'realtime' ? '⚡ Tiempo real' : s.fetch_mode === 'daily' ? '📅 Diario' : '⏳ Pendiente';
+                            const lastFetch = s.last_fetch
+                              ? new Date(s.last_fetch).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+                              : '—';
+                            return (
+                              <tr key={s.id} style={{ borderBottom:'1px solid #1e3a5f22', background: idx%2===0 ? '#0d1a2e' : '#0a1628' }}>
+                                <td style={{ padding:'10px 12px', whiteSpace:'nowrap' }}>
+                                  <span style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 8px', borderRadius:4, background:`${stColor}18`, border:`1px solid ${stColor}44`, fontSize:10, fontWeight:700, color:stColor }}>
+                                    {stDot} {stLabel}
+                                  </span>
+                                </td>
+                                <td style={{ padding:'10px 12px' }}>
+                                  <div style={{ fontSize:13, fontWeight:700, color:'#fbbf24' }}>{s.name}</div>
+                                  <div style={{ fontSize:9, color:'#475569', marginTop:2 }}>{s.id}</div>
+                                </td>
+                                <td style={{ padding:'10px 12px', fontSize:11, color:'#94a3b8', whiteSpace:'nowrap' }}>{s.country || '—'}</td>
+                                <td style={{ padding:'10px 12px', fontSize:10, color:'#64748b', whiteSpace:'nowrap' }}>{s.alcance || '—'}</td>
+                                <td style={{ padding:'10px 12px', whiteSpace:'nowrap' }}>
+                                  <span style={{ fontSize:10, fontWeight:600, color:modeColor }}>{modeLabel}</span>
+                                </td>
+                                <td style={{ padding:'10px 12px', fontSize:11, color:'#cbd5e1', lineHeight:1.5, maxWidth:320 }}>
+                                  {s.descripcion || <span style={{ color:'#334155', fontStyle:'italic' }}>Sin descripción</span>}
+                                </td>
+                                <td style={{ padding:'10px 12px', fontSize:10, color:'#475569', whiteSpace:'nowrap' }}>{lastFetch}</td>
+                              </tr>
+                            );
+                          })}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Último resumen VIGÍA */}
+              {data?.news_summary && (
+                <div style={{ marginTop:16, background:'#0d1a2e', border:'1px solid #8b5cf644', borderRadius:8, padding:14 }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'#8b5cf6', letterSpacing:2, marginBottom:8 }}>📰 ÚLTIMO RESUMEN VIGÍA — ESCUCHA SOCIAL</div>
+                  <div style={{ display:'flex', gap:16, marginBottom:8, fontSize:10 }}>
+                    <span style={{ color:'#64748b' }}>Generado: <span style={{ color:'#fbbf24' }}>{new Date(data.news_summary.generated_at).toLocaleString('es-PE')}</span></span>
+                    <span style={{ color:'#64748b' }}>Artículos: <span style={{ color:'#fbbf24' }}>{data.news_summary.articles_count}</span></span>
+                    <span style={{ color:'#64748b' }}>Score relevancia: <span style={{ color: data.news_summary.relevance_score >= 6 ? '#ef4444' : data.news_summary.relevance_score >= 4 ? '#f59e0b' : '#22c55e' }}>{data.news_summary.relevance_score}/10</span></span>
+                  </div>
+                  <div style={{ fontSize:12, color:'#e2e8f0', lineHeight:1.7, whiteSpace:'pre-wrap', borderLeft:'3px solid #8b5cf6', paddingLeft:10 }}>
+                    {data.news_summary.summary_text?.substring(0, 600)}{data.news_summary.summary_text?.length > 600 ? '...' : ''}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -883,7 +938,7 @@ export default function App() {
           {tab === 'usuarios' && isAdmin && <UsersTab />}
         </div>
 
-        {/* ── SIDEBAR: 4 columnas en MAPA, sidebar normal en resto ── */}
+        {/* ── SIDEBAR ── */}
         {!fullWidthTabs.has(tab) && tab === 'mapa' && (
           <>
             <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', overflow:'auto', display:'flex', flexDirection:'column' }}>
