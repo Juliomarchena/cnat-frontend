@@ -32,11 +32,9 @@ export default function ModuloVIGIA({ data }) {
     setLoading(true);
 
     try {
-      // Obtener token de sesión de Supabase para autenticación JWT
       const { data: { session } } = await supabase.auth.getSession();
       const token = session?.access_token;
 
-      // URL de la Edge Function VIGIA
       const VIGIA_URL = 'https://zgcjggfbdpfbmivwqjvt.supabase.co/functions/v1/vigia';
 
       const response = await fetch(VIGIA_URL, {
@@ -126,7 +124,8 @@ export default function ModuloVIGIA({ data }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Header VIGIA */}
+
+      {/* ── Header VIGIA ── */}
       <div style={{ padding: 16, borderBottom: '2px solid #06b6d4', background: '#0a1628' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <div style={{
@@ -160,9 +159,41 @@ export default function ModuloVIGIA({ data }) {
         </div>
       </div>
 
-      {/* Prompts rápidos (solo si no hay mensajes) */}
+      {/* ── Pantalla inicial: descripción + consultas rápidas ── */}
       {messages.length === 0 && (
-        <div style={{ padding: 14 }}>
+        <div style={{ padding: 16 }}>
+
+          {/* Descripción */}
+          <div style={{
+            background: '#0d1a2e',
+            border: '1px solid #06b6d444',
+            borderLeft: '4px solid #06b6d4',
+            borderRadius: 8,
+            padding: '14px 16px',
+            marginBottom: 16
+          }}>
+            <div style={{ fontSize: 11, color: '#67e8f9', fontWeight: 700, letterSpacing: 1.5, marginBottom: 10 }}>
+              ¿QUÉ ES VIGIA?
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <span style={{ fontSize: 16, lineHeight: 1 }}>🔭</span>
+                <div style={{ fontSize: 12, color: '#e2e8f0', lineHeight: 1.6 }}>
+                  <span style={{ color: '#fbbf24', fontWeight: 700 }}>Pregunta a VIGÍA</span> para saber{' '}
+                  <span style={{ color: '#06b6d4', fontWeight: 700 }}>qué pasó antes</span> — consulta sismos históricos, busca por región, fecha o magnitud.
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
+                <span style={{ fontSize: 16, lineHeight: 1 }}>📡</span>
+                <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6 }}>
+                  Para el estado actual del sistema en tiempo real, usa el módulo{' '}
+                  <span style={{ color: '#a78bfa', fontWeight: 700 }}>ARIA (IA)</span>.
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Consultas rápidas */}
           <div style={{ fontSize: 11, color: '#fbbf24', letterSpacing: 1.5, marginBottom: 10, fontWeight: 700 }}>
             CONSULTAS RÁPIDAS
           </div>
@@ -173,15 +204,15 @@ export default function ModuloVIGIA({ data }) {
               border: '1px solid #1e3a5f66', borderRadius: 8, color: '#cbd5e1',
               fontSize: 12, cursor: 'pointer', fontFamily: 'inherit'
             }}
-              onMouseOver={e => { e.target.style.background = '#164e6344'; e.target.style.color = '#67e8f9' }}
-              onMouseOut={e => { e.target.style.background = '#0d1a2e'; e.target.style.color = '#cbd5e1' }}>
+              onMouseOver={e => { e.target.style.background = '#164e6344'; e.target.style.color = '#67e8f9'; }}
+              onMouseOut={e => { e.target.style.background = '#0d1a2e'; e.target.style.color = '#cbd5e1'; }}>
               ▸ {p}
             </button>
           ))}
         </div>
       )}
 
-      {/* Mensajes */}
+      {/* ── Mensajes ── */}
       <div style={{ flex: 1, overflow: 'auto', padding: 14 }}>
         {messages.map((m, i) => (
           <div key={i} style={{
@@ -209,7 +240,7 @@ export default function ModuloVIGIA({ data }) {
         )}
       </div>
 
-      {/* Input */}
+      {/* ── Input ── */}
       <div style={{ padding: 14, borderTop: '2px solid #1e3a5f', display: 'flex', gap: 8 }}>
         <input
           value={input}
