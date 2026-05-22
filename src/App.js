@@ -650,6 +650,211 @@ function UsersTab() {
   );
 }
 
+/* ═══ FUENTES TAB ═══ */
+function FuentesTab({ sr = [], data }) {
+  const [ejecutando, setEjecutando] = useState(false);
+  const [ejecutandoId, setEjecutandoId] = useState(null);
+  const [mensaje, setMensaje] = useState('');
+
+  const ahora = Date.now();
+
+  // Determina el estado visual real de cada fuente
+  const getEstado = (s) => {
+    const tieneIntegrador = s.fetch_mode === 'realtime' || s.fetch_mode === 'daily';
+    if (!tieneIntegrador) return 'sin_integrar';
+    if (s.status === 'error') return 'error';
+    if (!s.last_fetch) return 'esperando';
+    const minutos = (ahora - new Date(s.last_fetch).getTime()) / 60000;
+    if (s.fetch_mode === 'realtime') return minutos <= 10 ? 'en_linea' : 'esperando';
+    if (s.fetch_mode === 'daily') return 'en_espera';
+    return 'esperando';
+  };
+
+  const estadoConfig = {
+    en_linea:     { label: 'EN LÍNEA',    color: '#22c55e', bg: '#22c55e18', border: '#22c55e44', icono: '⚙️', anim: 'spin 2s linear infinite' },
+    en_espera:    { label: 'EN ESPERA',   color: '#f59e0b', bg: '#f59e0b18', border: '#f59e0b44', icono: '⏳', anim: 'hourglass 2s ease-in-out infinite' },
+    esperando:    { label: 'INICIANDO',   color: '#3b82f6', bg: '#3b82f618', border: '#3b82f644', icono: '🔄', anim: 'spin 1.5s linear infinite' },
+    error:        { label: 'ERROR',       color: '#ef4444', bg: '#ef444418', border: '#ef444444', icono: '⛔', anim: 'none' },
+    sin_integrar: { label: 'SIN INTEGRAR',color: '#475569', bg: '#47556918', border: '#47556944', icono: '🔧', anim: 'none' },
+  };
+
+  const ejecutarFuente = async (sourceId) => {
+    setEjecutandoId(sourceId);
+    setMensaje('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const API = (process.env.REACT_APP_API_URL || 'https://cnat-backend-1.onrender.com');
+      const r = await fetch(`${API}/fetch`, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const d = await r.json();
+      setMensaje(`✅ Fetch ejecutado: ${new Date().toLocaleTimeString('es-PE')}`);
+    } catch(e) {
+      setMensaje('❌ Error al ejecutar fetch');
+    }
+    setEjecutandoId(null);
+  };
+
+  const ejecutarResumen = async () => {
+    setEjecutando(true);
+    setMensaje('');
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      const token = session?.access_token;
+      const API = (process.env.REACT_APP_API_URL || 'https://cnat-backend-1.onrender.com');
+      await fetch(`${API}/fetch-summary`, { headers: { 'Authorization': `Bearer ${token}` } });
+      setMensaje(`✅ Resumen VIGÍA generado: ${new Date().toLocaleTimeString('es-PE')}`);
+    } catch(e) {
+      setMensaje('❌ Error al generar resumen');
+    }
+    setEjecutando(false);
+  };
+
+  const counts = {
+    en_linea:     sr.filter(s => getEstado(s) === 'en_linea').length,
+    en_espera:    sr.filter(s => getEstado(s) === 'en_espera').length,
+    error:        sr.filter(s => getEstado(s) === 'error').length,
+    sin_integrar: sr.filter(s => getEstado(s) === 'sin_integrar').length,
+  };
+
+  const catLabels = {
+    sismo:    '🔴 SISMOLÓGICAS',
+    alerta:   '🚨 CENTROS DE ALERTA',
+    boya:     '🌊 BOYAS / NIVEL DEL MAR',
+    noticias: '📰 NOTICIAS / ESCUCHA SOCIAL',
+  };
+
+  return (
+    <div style={{ padding: 4 }}>
+      <style>{`
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes hourglass { 0%,100% { transform: rotate(0deg); } 50% { transform: rotate(180deg); } }
+        @keyframes pulse-green { 0%,100% { box-shadow: 0 0 0 0 #22c55e66; } 50% { box-shadow: 0 0 0 6px #22c55e00; } }
+      `}</style>
+
+      {/* ── Header ── */}
+      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16, flexWrap:'wrap', gap:10 }}>
+        <h3 style={{ fontSize:14, color:'#fbbf24', letterSpacing:2, margin:0 }}>FUENTES DE INFORMACIÓN — CNAT</h3>
+        <div style={{ display:'flex', gap:12, fontSize:11, flexWrap:'wrap', alignItems:'center' }}>
+          <span style={{ color:'#22c55e' }}>⚙️ EN LÍNEA: <b>{counts.en_linea}</b></span>
+          <span style={{ color:'#f59e0b' }}>⏳ EN ESPERA: <b>{counts.en_espera}</b></span>
+          <span style={{ color:'#ef4444' }}>⛔ ERROR: <b>{counts.error}</b></span>
+          <span style={{ color:'#475569' }}>🔧 SIN INTEGRAR: <b>{counts.sin_integrar}</b></span>
+          <button onClick={ejecutarResumen} disabled={ejecutando} style={{ padding:'5px 14px', borderRadius:6, border:'1px solid #8b5cf6', background:'#8b5cf622', color:'#c4b5fd', fontSize:11, cursor:'pointer', fontFamily:'inherit', fontWeight:700 }}>
+            {ejecutando ? '⏳ Generando...' : '📰 Generar resumen VIGÍA'}
+          </button>
+        </div>
+      </div>
+
+      {/* Mensaje de feedback */}
+      {mensaje && (
+        <div style={{ marginBottom:12, padding:'8px 14px', borderRadius:6, background: mensaje.startsWith('✅') ? '#22c55e18' : '#ef444418', border:`1px solid ${mensaje.startsWith('✅') ? '#22c55e44' : '#ef444444'}`, fontSize:12, color: mensaje.startsWith('✅') ? '#22c55e' : '#ef4444' }}>
+          {mensaje}
+        </div>
+      )}
+
+      {/* ── Tablas por categoría ── */}
+      {['sismo','alerta','boya','noticias'].map(tipo => {
+        const fuentes = sr.filter(s => s.source_type === tipo);
+        if (!fuentes.length) return null;
+        return (
+          <div key={tipo} style={{ marginBottom:20 }}>
+            <div style={{ fontSize:11, fontWeight:700, color:'#f59e0b', letterSpacing:2, marginBottom:8, paddingBottom:4, borderBottom:'1px solid #1e3a5f' }}>
+              {catLabels[tipo]}
+            </div>
+            <div style={{ borderRadius:8, overflow:'hidden', border:'1px solid #1e3a5f44' }}>
+              <table style={{ width:'100%', borderCollapse:'collapse', background:'#0d1a2e' }}>
+                <thead>
+                  <tr style={{ background:'#0a1628' }}>
+                    {['Estado','Fuente','País','Descripción','Último fetch','Acción'].map(h => (
+                      <th key={h} style={{ padding:'8px 12px', fontSize:9, fontWeight:700, color:'#64748b', textAlign:'left', borderBottom:'1px solid #1e3a5f', letterSpacing:1, whiteSpace:'nowrap' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {fuentes.map((s, idx) => {
+                    const estado = getEstado(s);
+                    const cfg    = estadoConfig[estado];
+                    const lastFetch = s.last_fetch
+                      ? new Date(s.last_fetch).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
+                      : '—';
+                    const puedeEjecutar = estado === 'en_espera' || estado === 'error' || estado === 'en_linea';
+                    return (
+                      <tr key={s.id} style={{ borderBottom:'1px solid #1e3a5f22', background: idx%2===0 ? '#0d1a2e' : '#0a1628' }}>
+
+                        {/* Estado con ícono animado */}
+                        <td style={{ padding:'10px 12px', whiteSpace:'nowrap' }}>
+                          <div style={{ display:'inline-flex', alignItems:'center', gap:7, padding:'5px 10px', borderRadius:6, background:cfg.bg, border:`1px solid ${cfg.border}` }}>
+                            <span style={{ fontSize:15, display:'inline-block', animation: cfg.anim }}>{cfg.icono}</span>
+                            <span style={{ fontSize:10, fontWeight:700, color:cfg.color, letterSpacing:0.5 }}>{cfg.label}</span>
+                            {estado === 'en_linea' && (
+                              <div style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', animation:'pulse-green 1.5s infinite' }} />
+                            )}
+                          </div>
+                        </td>
+
+                        {/* Fuente */}
+                        <td style={{ padding:'10px 12px' }}>
+                          <div style={{ fontSize:13, fontWeight:700, color:'#fbbf24' }}>{s.name}</div>
+                          <div style={{ fontSize:9, color:'#475569', marginTop:2 }}>{s.id} · {s.alcance || '—'}</div>
+                        </td>
+
+                        {/* País */}
+                        <td style={{ padding:'10px 12px', fontSize:11, color:'#94a3b8', whiteSpace:'nowrap' }}>{s.country || '—'}</td>
+
+                        {/* Descripción */}
+                        <td style={{ padding:'10px 12px', fontSize:11, color:'#cbd5e1', lineHeight:1.5, maxWidth:360 }}>
+                          {s.descripcion || <span style={{ color:'#334155', fontStyle:'italic' }}>Sin descripción</span>}
+                        </td>
+
+                        {/* Último fetch */}
+                        <td style={{ padding:'10px 12px', fontSize:10, color: lastFetch === '—' ? '#334155' : '#64748b', whiteSpace:'nowrap' }}>
+                          {lastFetch}
+                        </td>
+
+                        {/* Acción */}
+                        <td style={{ padding:'10px 12px', whiteSpace:'nowrap' }}>
+                          {puedeEjecutar ? (
+                            <button
+                              onClick={() => ejecutarFuente(s.id)}
+                              disabled={ejecutandoId === s.id}
+                              style={{ padding:'4px 12px', borderRadius:5, border:`1px solid ${cfg.color}66`, background:`${cfg.color}18`, color:cfg.color, fontSize:10, cursor:'pointer', fontFamily:'inherit', fontWeight:700 }}
+                            >
+                              {ejecutandoId === s.id ? '⏳' : '▶ EJECUTAR'}
+                            </button>
+                          ) : (
+                            <span style={{ fontSize:10, color:'#334155' }}>—</span>
+                          )}
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        );
+      })}
+
+      {/* ── Último resumen VIGÍA ── */}
+      {data?.news_summary && (
+        <div style={{ marginTop:16, background:'#0d1a2e', border:'1px solid #8b5cf644', borderRadius:8, padding:14 }}>
+          <div style={{ fontSize:11, fontWeight:700, color:'#8b5cf6', letterSpacing:2, marginBottom:8 }}>📰 ÚLTIMO RESUMEN VIGÍA — ESCUCHA SOCIAL</div>
+          <div style={{ display:'flex', gap:16, marginBottom:8, fontSize:10, flexWrap:'wrap' }}>
+            <span style={{ color:'#64748b' }}>Generado: <span style={{ color:'#fbbf24' }}>{new Date(data.news_summary.generated_at).toLocaleString('es-PE')}</span></span>
+            <span style={{ color:'#64748b' }}>Artículos procesados: <span style={{ color:'#fbbf24' }}>{data.news_summary.articles_count}</span></span>
+            <span style={{ color:'#64748b' }}>Score: <span style={{ color: data.news_summary.relevance_score >= 6 ? '#ef4444' : data.news_summary.relevance_score >= 4 ? '#f59e0b' : '#22c55e' }}>{data.news_summary.relevance_score}/10</span></span>
+          </div>
+          <div style={{ fontSize:12, color:'#e2e8f0', lineHeight:1.7, whiteSpace:'pre-wrap', borderLeft:'3px solid #8b5cf6', paddingLeft:10 }}>
+            {data.news_summary.summary_text?.substring(0, 600)}{data.news_summary.summary_text?.length > 600 ? '...' : ''}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ═══════════════════════════════════════════════
    MAIN APP
    ═══════════════════════════════════════════════ */
@@ -830,95 +1035,12 @@ export default function App() {
           )}
 
           {/* ══════════════════════════════════════════
-              PESTAÑA FUENTES — FASE 2 ACTUALIZADA
+              PESTAÑA FUENTES — FASE 2 v2
+              Estados inteligentes + íconos animados
+              + botón Ejecutar a demanda
               ══════════════════════════════════════════ */}
           {tab === 'fuentes' && (
-            <div style={{ padding: 4 }}>
-
-              {/* Header con contadores */}
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:16 }}>
-                <h3 style={{ fontSize:14, color:'#fbbf24', letterSpacing:2, margin:0 }}>FUENTES DE INFORMACIÓN — CNAT</h3>
-                <div style={{ display:'flex', gap:16, fontSize:11 }}>
-                  <span style={{ color:'#22c55e' }}>🟢 ACTIVAS: <b>{sr.filter(s=>s.status==='active').length}</b></span>
-                  <span style={{ color:'#ef4444' }}>🔴 ERROR: <b>{sr.filter(s=>s.status==='error').length}</b></span>
-                  <span style={{ color:'#64748b' }}>⚫ PENDIENTES: <b>{sr.filter(s=>s.status==='pending').length}</b></span>
-                </div>
-              </div>
-
-              {/* Tabla por categoría */}
-              {['sismo','alerta','boya','noticias'].map(tipo => {
-                const fuentes = sr.filter(s => s.source_type === tipo);
-                if (!fuentes.length) return null;
-                const catLabel = tipo==='sismo'?'🔴 SISMOLÓGICAS':tipo==='alerta'?'🚨 CENTROS DE ALERTA':tipo==='boya'?'🌊 BOYAS / NIVEL DEL MAR':'📰 NOTICIAS / ESCUCHA SOCIAL';
-                return (
-                  <div key={tipo} style={{ marginBottom:20 }}>
-                    <div style={{ fontSize:11, fontWeight:700, color:'#f59e0b', letterSpacing:2, marginBottom:8, paddingBottom:4, borderBottom:'1px solid #1e3a5f' }}>{catLabel}</div>
-                    <div style={{ borderRadius:8, overflow:'hidden', border:'1px solid #1e3a5f44' }}>
-                      <table style={{ width:'100%', borderCollapse:'collapse', background:'#0d1a2e' }}>
-                        <thead>
-                          <tr style={{ background:'#0a1628' }}>
-                            {['Estado','Fuente','País','Alcance','Modo','Descripción','Último fetch'].map(h => (
-                              <th key={h} style={{ padding:'8px 12px', fontSize:9, fontWeight:700, color:'#64748b', textAlign:'left', borderBottom:'1px solid #1e3a5f', letterSpacing:1, whiteSpace:'nowrap' }}>{h}</th>
-                            ))}
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {fuentes.map((s, idx) => {
-                            const isActive  = s.status === 'active';
-                            const isError   = s.status === 'error';
-                            const stColor   = isActive ? '#22c55e' : isError ? '#ef4444' : '#64748b';
-                            const stLabel   = isActive ? 'ACTIVA' : isError ? 'ERROR' : 'PENDIENTE';
-                            const stDot     = isActive ? '🟢' : isError ? '🔴' : '⚫';
-                            const modeColor = s.fetch_mode === 'realtime' ? '#3b82f6' : s.fetch_mode === 'daily' ? '#8b5cf6' : '#475569';
-                            const modeLabel = s.fetch_mode === 'realtime' ? '⚡ Tiempo real' : s.fetch_mode === 'daily' ? '📅 Diario' : '⏳ Pendiente';
-                            const lastFetch = s.last_fetch
-                              ? new Date(s.last_fetch).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})
-                              : '—';
-                            return (
-                              <tr key={s.id} style={{ borderBottom:'1px solid #1e3a5f22', background: idx%2===0 ? '#0d1a2e' : '#0a1628' }}>
-                                <td style={{ padding:'10px 12px', whiteSpace:'nowrap' }}>
-                                  <span style={{ display:'inline-flex', alignItems:'center', gap:5, padding:'3px 8px', borderRadius:4, background:`${stColor}18`, border:`1px solid ${stColor}44`, fontSize:10, fontWeight:700, color:stColor }}>
-                                    {stDot} {stLabel}
-                                  </span>
-                                </td>
-                                <td style={{ padding:'10px 12px' }}>
-                                  <div style={{ fontSize:13, fontWeight:700, color:'#fbbf24' }}>{s.name}</div>
-                                  <div style={{ fontSize:9, color:'#475569', marginTop:2 }}>{s.id}</div>
-                                </td>
-                                <td style={{ padding:'10px 12px', fontSize:11, color:'#94a3b8', whiteSpace:'nowrap' }}>{s.country || '—'}</td>
-                                <td style={{ padding:'10px 12px', fontSize:10, color:'#64748b', whiteSpace:'nowrap' }}>{s.alcance || '—'}</td>
-                                <td style={{ padding:'10px 12px', whiteSpace:'nowrap' }}>
-                                  <span style={{ fontSize:10, fontWeight:600, color:modeColor }}>{modeLabel}</span>
-                                </td>
-                                <td style={{ padding:'10px 12px', fontSize:11, color:'#cbd5e1', lineHeight:1.5, maxWidth:320 }}>
-                                  {s.descripcion || <span style={{ color:'#334155', fontStyle:'italic' }}>Sin descripción</span>}
-                                </td>
-                                <td style={{ padding:'10px 12px', fontSize:10, color:'#475569', whiteSpace:'nowrap' }}>{lastFetch}</td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  </div>
-                );
-              })}
-
-              {/* Último resumen VIGÍA */}
-              {data?.news_summary && (
-                <div style={{ marginTop:16, background:'#0d1a2e', border:'1px solid #8b5cf644', borderRadius:8, padding:14 }}>
-                  <div style={{ fontSize:11, fontWeight:700, color:'#8b5cf6', letterSpacing:2, marginBottom:8 }}>📰 ÚLTIMO RESUMEN VIGÍA — ESCUCHA SOCIAL</div>
-                  <div style={{ display:'flex', gap:16, marginBottom:8, fontSize:10 }}>
-                    <span style={{ color:'#64748b' }}>Generado: <span style={{ color:'#fbbf24' }}>{new Date(data.news_summary.generated_at).toLocaleString('es-PE')}</span></span>
-                    <span style={{ color:'#64748b' }}>Artículos: <span style={{ color:'#fbbf24' }}>{data.news_summary.articles_count}</span></span>
-                    <span style={{ color:'#64748b' }}>Score relevancia: <span style={{ color: data.news_summary.relevance_score >= 6 ? '#ef4444' : data.news_summary.relevance_score >= 4 ? '#f59e0b' : '#22c55e' }}>{data.news_summary.relevance_score}/10</span></span>
-                  </div>
-                  <div style={{ fontSize:12, color:'#e2e8f0', lineHeight:1.7, whiteSpace:'pre-wrap', borderLeft:'3px solid #8b5cf6', paddingLeft:10 }}>
-                    {data.news_summary.summary_text?.substring(0, 600)}{data.news_summary.summary_text?.length > 600 ? '...' : ''}
-                  </div>
-                </div>
-              )}
-            </div>
+            <FuentesTab sr={sr} data={data} />
           )}
 
           {tab === 'umbrales' && (
