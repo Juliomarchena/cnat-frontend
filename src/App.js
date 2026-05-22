@@ -510,29 +510,33 @@ function AriaAssistant({ data }) {
 
           {/* Descripción */}
           <div style={{
-            background: '#0d1a2e',
-            border: '1px solid #8b5cf644',
-            borderLeft: '4px solid #8b5cf6',
-            borderRadius: 8,
-            padding: '14px 16px',
-            marginBottom: 16
+            background: '#000000',
+            border: '2px solid #8b5cf6',
+            borderRadius: 10,
+            padding: '16px 18px',
+            marginBottom: 18,
+            boxShadow: '0 0 18px rgba(139,92,246,0.4), inset 0 0 30px rgba(139,92,246,0.05)',
+            position: 'relative',
+            overflow: 'hidden'
           }}>
-            <div style={{ fontSize: 11, color: '#a78bfa', fontWeight: 700, letterSpacing: 1.5, marginBottom: 10 }}>
-              ¿QUÉ ES ARIA?
+            <div style={{ position:'absolute', top:0, left:0, width:'100%', height:2, background:'linear-gradient(90deg,#8b5cf6,#6366f1,#8b5cf6)' }} />
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:12 }}>
+              <span style={{ fontSize:18 }}>⚠️</span>
+              <span style={{ fontSize:11, color:'#c4b5fd', fontWeight:700, letterSpacing:2.5 }}>GUÍA DE USO — ARIA</span>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <span style={{ fontSize: 16, lineHeight: 1 }}>📡</span>
-                <div style={{ fontSize: 12, color: '#e2e8f0', lineHeight: 1.6 }}>
-                  <span style={{ color: '#fbbf24', fontWeight: 700 }}>Mira ARIA</span> para saber{' '}
-                  <span style={{ color: '#a78bfa', fontWeight: 700 }}>qué está pasando ahora</span> — genera boletines con el estado actual del sistema en tiempo real.
+                <div style={{ fontSize: 13, color: '#e2e8f0', lineHeight: 1.7, fontStyle: 'italic' }}>
+                  <span style={{ color: '#fbbf24', fontWeight: 700, fontStyle: 'normal' }}>Mira ARIA</span> para saber{' '}
+                  <span style={{ color: '#c4b5fd', fontWeight: 700, fontStyle: 'normal' }}>qué está pasando ahora</span> — genera boletines con el estado actual del sistema en tiempo real.
                 </div>
               </div>
               <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                 <span style={{ fontSize: 16, lineHeight: 1 }}>🔭</span>
-                <div style={{ fontSize: 12, color: '#94a3b8', lineHeight: 1.6 }}>
+                <div style={{ fontSize: 13, color: '#94a3b8', lineHeight: 1.7, fontStyle: 'italic' }}>
                   Para buscar sismos pasados por región, fecha o magnitud, usa el módulo{' '}
-                  <span style={{ color: '#06b6d4', fontWeight: 700 }}>VIGÍA (IA)</span>.
+                  <span style={{ color: '#06b6d4', fontWeight: 700, fontStyle: 'normal' }}>VIGÍA (IA)</span>.
                 </div>
               </div>
             </div>
