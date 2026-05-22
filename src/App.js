@@ -665,7 +665,7 @@ function VigiaResumenCRT({ summary }) {
     : '';
 
   const textoCompleto = summary?.summary_text
-    ? `> BOLETÍN VIGÍA — ${fechaEmision}\n> ARTÍCULOS PROCESADOS: ${summary.articles_count} | SCORE: ${summary.relevance_score}/10\n${'─'.repeat(80)}\n\n${summary.summary_text.substring(0, 900)}${summary.summary_text.length > 900 ? '\n\n> [RESUMEN TRUNCADO — VER MÓDULO VIGÍA (IA) PARA DETALLE COMPLETO]' : ''}`
+    ? `> BOLETÍN VIGÍA — ${fechaEmision}\n> ARTÍCULOS: ${summary.articles_count} | SCORE: ${summary.relevance_score}/10\n${'─'.repeat(60)}\n${summary.summary_text.substring(0, 900)}${summary.summary_text.length > 900 ? '\n[...ver VIGÍA (IA) para detalle completo]' : ''}`
     : '';
 
   useEffect(() => {
@@ -687,8 +687,8 @@ function VigiaResumenCRT({ summary }) {
           clearInterval(timerRef.current);
           setTyping(false);
         }
-      }, 18); // velocidad de tipeo
-    }, 400);
+      }, 10); // velocidad de tipeo más rápida
+    }, 200);
 
     return () => { if (timerRef.current) clearInterval(timerRef.current); };
   }, [summary?.id, textoCompleto]);
@@ -716,7 +716,7 @@ function VigiaResumenCRT({ summary }) {
         </div>
 
         {/* Texto con typewriter */}
-        <div style={{ fontSize:12, color:'#00cc00', lineHeight:1.9, whiteSpace:'pre-wrap', textShadow:'0 0 4px rgba(0,255,0,0.2)', letterSpacing:0.3, minHeight:80 }}>
+        <div style={{ fontSize:12, color:'#00cc00', lineHeight:1.4, whiteSpace:'pre-wrap', textShadow:'0 0 4px rgba(0,255,0,0.2)', letterSpacing:0.3, minHeight:80 }}>
           {displayText || <span style={{ color:'#00ff0044' }}>{'> INICIANDO TRANSMISIÓN...'}</span>}
           {typing && <span style={{ animation:'blink 0.4s infinite', color:'#00ff00', textShadow:'0 0 8px #00ff00' }}>█</span>}
           {!typing && displayText && <span style={{ animation:'blink 0.8s infinite', color:'#00ff0088' }}>█</span>}
