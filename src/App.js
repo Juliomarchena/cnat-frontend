@@ -1258,7 +1258,7 @@ export default function App() {
           {tab==='mapa' && (
             <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
               <div style={{ flex:1, overflow:'hidden', minHeight:0 }}>
-                <PacificMapLeaflet earthquakes={eq.filter(e => (Date.now() - new Date(e.event_time).getTime()) / 86400000 <= 7)} buoys={bu} focusedEqId={focusedEqId} onClearFocus={clearFocus} />
+                <PacificMapLeaflet earthquakes={eq.filter(e => (Date.now() - new Date(e.event_time).getTime()) / 86400000 <= 3)} buoys={bu} focusedEqId={focusedEqId} onClearFocus={clearFocus} />
               </div>
               <MapLegend />
             </div>
