@@ -12,6 +12,7 @@ import ModuloVIGIA          from './ModuloVIGIA';
 // ─── Módulo ARIA independizado (v3.0) ───
 import ModuloARIA  from './ModuloARIA';
 import AutoReport  from './AutoReport';
+import PanelIGP from './PanelIGP';
 
 /* ════════════════════════════════════════════
    CONFIG
@@ -1320,6 +1321,7 @@ export default function App() {
           <>
             <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', overflow:'auto', display:'flex', flexDirection:'column' }}>
               <StatsSummary earthquakes={eq} alerts={al} buoys={bu} onFocus={focusEq} />
+              <PanelIGP tweets={data?.igp_tweets || []} />
             </div>
             <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', overflow:'auto', padding:12, display:'flex', flexDirection:'column' }}>
               <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
@@ -1353,6 +1355,7 @@ export default function App() {
             <div style={{ display:'flex', flex:1, overflow:'hidden' }}>
               <div style={{ flex:1, borderRight:'1px solid #1e3a5f', overflow:'auto' }}>
                 <StatsSummary earthquakes={eq} alerts={al} buoys={bu} onFocus={focusEq} />
+                <PanelIGP tweets={data?.igp_tweets || []} />
               </div>
               <div style={{ flex:1, overflow:'auto', padding:12 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
