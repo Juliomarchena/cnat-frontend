@@ -345,7 +345,7 @@ function PacificMapLeaflet({ earthquakes=[], buoys=[], focusedEqId=null, onClear
    
       const horasAtras = (Date.now() - new Date(eq.event_time).getTime()) / 3600000;
      
-      const horasAtras = (Date.now() - new Date(eq.event_time).getTime()) / 3600000;
+      
       const isPulse    = ((eq.severity==='critical' || eq.severity==='warning') && horasAtras <= 24) || isFocused;
       const icon = L.divIcon({
         className:'',
