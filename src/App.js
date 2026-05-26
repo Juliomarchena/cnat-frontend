@@ -1248,7 +1248,7 @@ export default function App() {
       {/* ── CONTENIDO ── */}
       <div style={{
         display:'grid',
-        gridTemplateColumns: fullWidthTabs.has(tab) ? '1fr' : tab==='mapa' ? '1fr 200px 200px 240px' : '1fr 420px',
+        gridTemplateColumns: fullWidthTabs.has(tab) ? '1fr' : tab==='mapa' ? '1fr 200px 200px 360px' : '1fr 420px',
         gap:0,
         height:'calc(100vh - 220px)',
       }}>
