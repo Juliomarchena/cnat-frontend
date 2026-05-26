@@ -342,7 +342,11 @@ function PacificMapLeaflet({ earthquakes=[], buoys=[], focusedEqId=null, onClear
       const c = sevColor(eq.severity);
       const r = Math.max(5, (eq.magnitude||0)*2.5);
       const isFocused = eq.id === focusedEqId;
-      const isPulse   = eq.severity==='critical' || eq.severity==='warning' || isFocused;
+   
+      const horasAtras = (Date.now() - new Date(eq.event_time).getTime()) / 3600000;
+     
+      const horasAtras = (Date.now() - new Date(eq.event_time).getTime()) / 3600000;
+      const isPulse    = ((eq.severity==='critical' || eq.severity==='warning') && horasAtras <= 24) || isFocused;
       const icon = L.divIcon({
         className:'',
         html: `<div style="position:relative;width:${r*2}px;height:${r*2}px;">${isPulse?`<div style="position:absolute;inset:0;border-radius:50%;background:${c};opacity:0.25;animation:pulse-map 1.5s infinite;transform:scale(2.5);"></div>`:''}<div style="position:absolute;inset:0;border-radius:50%;background:${c};border:2px solid ${isFocused?'#fff':c};box-shadow:0 0 ${isFocused?14:6}px ${c};"></div>${eq.magnitude>=4.5||isFocused?`<div style="position:absolute;top:${r*2+3}px;left:50%;transform:translateX(-50%);white-space:nowrap;font-size:10px;font-weight:700;color:${isFocused?'#fff':c};font-family:monospace;text-shadow:0 1px 3px #000;">M${eq.magnitude}</div>`:''}</div>`,
@@ -1254,7 +1258,7 @@ export default function App() {
           {tab==='mapa' && (
             <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
               <div style={{ flex:1, overflow:'hidden', minHeight:0 }}>
-                <PacificMapLeaflet earthquakes={eq} buoys={bu} focusedEqId={focusedEqId} onClearFocus={clearFocus} />
+                <PacificMapLeaflet earthquakes={eq.filter(e => (Date.now() - new Date(e.event_time).getTime()) / 86400000 <= 7)} buoys={bu} focusedEqId={focusedEqId} onClearFocus={clearFocus} />
               </div>
               <MapLegend />
             </div>
