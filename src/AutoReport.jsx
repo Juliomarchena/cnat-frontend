@@ -108,7 +108,7 @@ export default function AutoReport({ data }) {
 
   useEffect(() => {
     if (!report) return;
-    const full = `> ${report.split('\n').filter(l=>l.trim()).join('\n> ')}`;
+   const full = report;
     setDisplayText(''); setTyping(true);
     let i = 0;
     if (timerRef.current) clearInterval(timerRef.current);
