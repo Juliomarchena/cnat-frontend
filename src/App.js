@@ -8,16 +8,16 @@ import { supabase }         from './supabaseClient';
 import TsunamiTracker       from './TsunamiTracker';
 import ModuloAlertasDHN     from './ModuloAlertasDHN';
 import ModuloVIGIA          from './ModuloVIGIA';
-
-// ─── Módulo ARIA independizado (v3.0) ───
-import ModuloARIA  from './ModuloARIA';
-import AutoReport  from './AutoReport';
-import PanelIGP from './PanelIGP';
+import ModuloARIA            from './ModuloARIA';
+import AutoReport            from './AutoReport';
+import PanelIGP              from './PanelIGP';
+import ModuloIGP             from './ModuloIGP';   // [FASE 3] Fuentes IGP
 
 /* ════════════════════════════════════════════
    CONFIG
    ════════════════════════════════════════════ */
-const API = (process.env.REACT_APP_API_URL || 'https://cnat-backend-1.onrender.com') + '/api';
+const API_BASE = process.env.REACT_APP_API_URL || 'https://cnat-backend-1.onrender.com';
+const API      = API_BASE + '/api';
 
 async function apiFetch(path, options = {}) {
   const { data: { session } } = await supabase.auth.getSession();
@@ -243,12 +243,9 @@ function AnalyticsDashboard({ earthquakes = [], buoys = [], sources = [], data =
           </PieChart>
         </ResponsiveContainer>
       </div>
-
-      {/* AutoReport importado desde ModuloARIA */}
       <div style={{ gridColumn:'span 3' }}>
         <AutoReport data={data} />
       </div>
-
       <div style={cd}>
         <div style={tt}>POR MAGNITUD</div>
         <ResponsiveContainer width="100%" height={180}>
@@ -341,11 +338,8 @@ function PacificMapLeaflet({ earthquakes=[], buoys=[], focusedEqId=null, onClear
       if (!eq.latitude || !eq.longitude) return;
       const c = sevColor(eq.severity);
       const r = Math.max(5, (eq.magnitude||0)*2.5);
-      const isFocused = eq.id === focusedEqId;
-   
+      const isFocused  = eq.id === focusedEqId;
       const horasAtras = (Date.now() - new Date(eq.event_time).getTime()) / 3600000;
-     
-      
       const isPulse    = ((eq.severity==='critical' || eq.severity==='warning') && horasAtras <= 24) || isFocused;
       const icon = L.divIcon({
         className:'',
@@ -458,23 +452,23 @@ function TideGaugeMap() {
   };
 
   const PERU_STATIONS = [
-    {code:'tala2',name:'Talara',       country:'PER',lat:-4.58, lon:-81.28,status:'online', sensor_type:'prs',operator:'DHN Peru'},
-    {code:'paita',name:'Paita',        country:'PER',lat:-5.08, lon:-81.11,status:'online', sensor_type:'prs',operator:'DHN Peru'},
-    {code:'bayo', name:'Bayovar',      country:'PER',lat:-5.79, lon:-81.01,status:'offline',sensor_type:'prs',operator:'DHN Peru'},
+    {code:'tala2',name:'Talara',        country:'PER',lat:-4.58, lon:-81.28,status:'online', sensor_type:'prs',operator:'DHN Peru'},
+    {code:'paita',name:'Paita',         country:'PER',lat:-5.08, lon:-81.11,status:'online', sensor_type:'prs',operator:'DHN Peru'},
+    {code:'bayo', name:'Bayovar',       country:'PER',lat:-5.79, lon:-81.01,status:'offline',sensor_type:'prs',operator:'DHN Peru'},
     {code:'lobos',name:'Lobos de Afuera',country:'PER',lat:-6.94,lon:-80.71,status:'online',sensor_type:'prs',operator:'DHN Peru'},
-    {code:'salav',name:'Salaverry',    country:'PER',lat:-8.23, lon:-78.98,status:'online', sensor_type:'prs',operator:'DHN Peru'},
-    {code:'chimb',name:'Chimbote',     country:'PER',lat:-9.08, lon:-78.61,status:'online', sensor_type:'prs',operator:'DHN Peru'},
-    {code:'huarm',name:'Huarmey',      country:'PER',lat:-10.07,lon:-78.15,status:'offline',sensor_type:'prs',operator:'DHN Peru'},
-    {code:'chan', name:'Chancay',       country:'PER',lat:-11.59,lon:-77.27,status:'online', sensor_type:'prs',operator:'DHN Peru'},
-    {code:'IsHor',name:'Isla Hormiga', country:'PER',lat:-11.96,lon:-77.34,status:'online', sensor_type:'prs',operator:'DHN Peru'},
-    {code:'call', name:'Callao',        country:'PER',lat:-12.07,lon:-77.17,status:'online', sensor_type:'prs',operator:'DHN Peru'},
-    {code:'huach',name:'Huacho',       country:'PER',lat:-11.12,lon:-77.61,status:'offline',sensor_type:'prs',operator:'DHN Peru'},
-    {code:'cazul',name:'Cerro Azul',   country:'PER',lat:-13.03,lon:-76.48,status:'offline',sensor_type:'prs',operator:'DHN Peru'},
+    {code:'salav',name:'Salaverry',     country:'PER',lat:-8.23, lon:-78.98,status:'online', sensor_type:'prs',operator:'DHN Peru'},
+    {code:'chimb',name:'Chimbote',      country:'PER',lat:-9.08, lon:-78.61,status:'online', sensor_type:'prs',operator:'DHN Peru'},
+    {code:'huarm',name:'Huarmey',       country:'PER',lat:-10.07,lon:-78.15,status:'offline',sensor_type:'prs',operator:'DHN Peru'},
+    {code:'chan', name:'Chancay',        country:'PER',lat:-11.59,lon:-77.27,status:'online', sensor_type:'prs',operator:'DHN Peru'},
+    {code:'IsHor',name:'Isla Hormiga',  country:'PER',lat:-11.96,lon:-77.34,status:'online', sensor_type:'prs',operator:'DHN Peru'},
+    {code:'call', name:'Callao',         country:'PER',lat:-12.07,lon:-77.17,status:'online', sensor_type:'prs',operator:'DHN Peru'},
+    {code:'huach',name:'Huacho',        country:'PER',lat:-11.12,lon:-77.61,status:'offline',sensor_type:'prs',operator:'DHN Peru'},
+    {code:'cazul',name:'Cerro Azul',    country:'PER',lat:-13.03,lon:-76.48,status:'offline',sensor_type:'prs',operator:'DHN Peru'},
     {code:'pdas', name:'Pisco / San Andres',country:'PER',lat:-13.72,lon:-76.22,status:'online',sensor_type:'prs',operator:'DHN Peru'},
-    {code:'sjuan',name:'San Juan',     country:'PER',lat:-15.36,lon:-75.16,status:'online', sensor_type:'prs',operator:'DHN Peru'},
-    {code:'chala',name:'Chala',        country:'PER',lat:-15.87,lon:-74.23,status:'online', sensor_type:'prs',operator:'DHN Peru'},
-    {code:'mata', name:'Matarani',      country:'PER',lat:-17.00,lon:-72.11,status:'online', sensor_type:'prs',operator:'DHN Peru'},
-    {code:'ilom', name:'Ilo',           country:'PER',lat:-17.64,lon:-71.34,status:'online', sensor_type:'prs',operator:'DHN Peru'},
+    {code:'sjuan',name:'San Juan',      country:'PER',lat:-15.36,lon:-75.16,status:'online', sensor_type:'prs',operator:'DHN Peru'},
+    {code:'chala',name:'Chala',         country:'PER',lat:-15.87,lon:-74.23,status:'online', sensor_type:'prs',operator:'DHN Peru'},
+    {code:'mata', name:'Matarani',       country:'PER',lat:-17.00,lon:-72.11,status:'online', sensor_type:'prs',operator:'DHN Peru'},
+    {code:'ilom', name:'Ilo',            country:'PER',lat:-17.64,lon:-71.34,status:'online', sensor_type:'prs',operator:'DHN Peru'},
   ];
 
   const mergeWithPeru = stations => {
@@ -818,19 +812,20 @@ function VigiaResumenCRT({ summary, procesando = false }) {
 }
 
 /* ════════════════════════════════════════════
-   FUENTES TAB
+   FUENTES TAB  ← [FASE 3] ModuloIGP integrado
    ════════════════════════════════════════════ */
-function FuentesTab({ sr=[], data }) {
+function FuentesTab({ sr=[], data, session }) {
   const [ejecutandoFetch,    setEjecutandoFetch]    = useState(false);
   const [ejecutandoNoticias, setEjecutandoNoticias] = useState(false);
   const [ejecutandoResumen,  setEjecutandoResumen]  = useState(false);
   const [mensaje,            setMensaje]            = useState('');
+  const [vistaIGP,           setVistaIGP]           = useState(false);  // [FASE 3]
   const ahora   = Date.now();
   const BACKEND = process.env.REACT_APP_API_URL || 'https://cnat-backend-1.onrender.com';
 
   const getToken = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    return session?.access_token;
+    const { data: { session: s } } = await supabase.auth.getSession();
+    return s?.access_token;
   };
 
   const getEstado = s => {
@@ -897,9 +892,19 @@ function FuentesTab({ sr=[], data }) {
     setEjecutandoResumen(false);
   };
 
+  // ── Token para ModuloIGP ──
+  const [tokenStr, setTokenStr] = useState('');
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      if (s?.access_token) setTokenStr(s.access_token);
+    });
+  }, []);
+
   return (
     <div style={{ padding:4 }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes hourglass{0%,100%{transform:rotate(0deg)}50%{transform:rotate(180deg)}}@keyframes pulse-dot{0%,100%{box-shadow:0 0 0 0 #22c55e88}50%{box-shadow:0 0 0 5px #22c55e00}}`}</style>
+
+      {/* ── Cabecera con toggle IGP ── */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14, flexWrap:'wrap', gap:10 }}>
         <h3 style={{ fontSize:14, color:'#fbbf24', letterSpacing:2, margin:0 }}>FUENTES DE INFORMACIÓN — CNAT</h3>
         <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
@@ -907,53 +912,68 @@ function FuentesTab({ sr=[], data }) {
           <span style={{ fontSize:11, color:'#f59e0b' }}>⏳ <b>{counts.en_espera}</b></span>
           <span style={{ fontSize:11, color:'#ef4444' }}>⛔ <b>{counts.error}</b></span>
           <span style={{ fontSize:11, color:'#475569' }}>🔧 <b>{counts.construccion}</b></span>
+          {/* [FASE 3] Botón IGP */}
+          <button onClick={()=>setVistaIGP(v=>!v)} style={{ padding:'5px 14px', borderRadius:5, border:`1px solid ${vistaIGP?'#00bfff':'#1e3a5f'}`, background:vistaIGP?'#00bfff18':'transparent', color:vistaIGP?'#00bfff':'#64748b', fontSize:10, cursor:'pointer', fontFamily:'inherit', fontWeight:700, letterSpacing:1 }}>
+            {vistaIGP ? '◀ VOLVER A FUENTES' : '◈ INTELIGENCIA IGP'}
+          </button>
           <button onClick={ejecutarFetchGeneral} disabled={ejecutandoFetch} style={{ padding:'5px 12px', borderRadius:5, border:'1px solid #3b82f666', background:'#3b82f618', color:'#60a5fa', fontSize:10, cursor:'pointer', fontFamily:'inherit', fontWeight:700 }}>{ejecutandoFetch?'⏳':'▶ FETCH GENERAL'}</button>
           <button onClick={ejecutarResumen} disabled={ejecutandoResumen} style={{ padding:'5px 12px', borderRadius:5, border:'1px solid #8b5cf666', background:'#8b5cf618', color:'#c4b5fd', fontSize:10, cursor:'pointer', fontFamily:'inherit', fontWeight:700 }}>{ejecutandoResumen?'⏳':'📰 RESUMEN VIGÍA'}</button>
         </div>
       </div>
+
       {mensaje && <div style={{ marginBottom:10, padding:'7px 12px', borderRadius:6, background:mensaje.startsWith('✅')?'#22c55e15':'#ef444415', border:`1px solid ${mensaje.startsWith('✅')?'#22c55e44':'#ef444444'}`, fontSize:11, color:mensaje.startsWith('✅')?'#22c55e':'#ef4444' }}>{mensaje}</div>}
-      {['sismo','alerta','boya','noticias'].map(tipo => {
-        const fuentes  = ordenarFuentes(sr.filter(s=>s.source_type===tipo));
-        if (!fuentes.length) return null;
-        const esNoticias = tipo==='noticias';
-        return (
-          <div key={tipo} style={{ marginBottom:18 }}>
-            <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8, paddingBottom:4, borderBottom:'1px solid #1e3a5f' }}>
-              <div style={{ fontSize:11, fontWeight:700, color:'#f59e0b', letterSpacing:2 }}>{catLabels[tipo]}</div>
-              {esNoticias && <button onClick={ejecutarNoticias} disabled={ejecutandoNoticias} style={{ padding:'4px 12px', borderRadius:5, border:'1px solid #f59e0b66', background:'#f59e0b18', color:'#fbbf24', fontSize:10, cursor:'pointer', fontFamily:'inherit', fontWeight:700 }}>{ejecutandoNoticias?'⏳ Ejecutando...':'▶ EJECUTAR NOTICIAS (BBC · NYT · WaPo)'}</button>}
-            </div>
-            <div style={{ borderRadius:8, overflow:'hidden', border:'1px solid #1e3a5f44' }}>
-              <table style={{ width:'100%', borderCollapse:'collapse', background:'#0d1a2e' }}>
-                <thead><tr style={{ background:'#0a1628' }}>{['Estado','Fuente','País','Descripción','Último fetch','Acción'].map(h=><th key={h} style={{ padding:'8px 12px', fontSize:9, fontWeight:700, color:'#64748b', textAlign:'left', borderBottom:'1px solid #1e3a5f', letterSpacing:1, whiteSpace:'nowrap' }}>{h}</th>)}</tr></thead>
-                <tbody>
-                  {fuentes.map((s,idx) => {
-                    const estado=getEstado(s), cfg=CFG[estado];
-                    const lastFetch=s.last_fetch?new Date(s.last_fetch).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
-                    const puedeEjecutar=(estado==='error'||estado==='iniciando')&&!esNoticias;
-                    return (
-                      <tr key={s.id} style={{ borderBottom:'1px solid #1e3a5f22', background:idx%2===0?'#0d1a2e':'#0a1628' }}>
-                        <td style={{ padding:'10px 12px', whiteSpace:'nowrap' }}>
-                          <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 10px', borderRadius:6, background:cfg.bg, border:`1px solid ${cfg.border}` }}>
-                            <span style={{ fontSize:14, display:'inline-block', animation:cfg.anim!=='none'?cfg.anim:undefined }}>{cfg.icono}</span>
-                            <span style={{ fontSize:10, fontWeight:700, color:cfg.color }}>{cfg.label}</span>
-                            {cfg.pulso && <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', animation:'pulse-dot 1.5s infinite' }}/>}
-                          </div>
-                        </td>
-                        <td style={{ padding:'10px 12px' }}><div style={{ fontSize:13, fontWeight:700, color:'#fbbf24' }}>{s.name}</div><div style={{ fontSize:9, color:'#475569', marginTop:2 }}>{s.id} · {s.alcance||s.country||'—'}</div></td>
-                        <td style={{ padding:'10px 12px', fontSize:11, color:'#94a3b8', whiteSpace:'nowrap' }}>{s.country||'—'}</td>
-                        <td style={{ padding:'10px 12px', fontSize:11, color:'#cbd5e1', lineHeight:1.5, maxWidth:340 }}>{s.descripcion||<span style={{ color:'#334155', fontStyle:'italic' }}>Sin descripción</span>}</td>
-                        <td style={{ padding:'10px 12px', fontSize:10, color:lastFetch==='—'?'#334155':'#64748b', whiteSpace:'nowrap' }}>{lastFetch}</td>
-                        <td style={{ padding:'10px 12px', whiteSpace:'nowrap' }}>{puedeEjecutar?<button onClick={ejecutarFetchGeneral} disabled={ejecutandoFetch} style={{ padding:'4px 10px', borderRadius:5, border:`1px solid ${cfg.color}66`, background:`${cfg.color}18`, color:cfg.color, fontSize:10, cursor:'pointer', fontFamily:'inherit', fontWeight:700 }}>{ejecutandoFetch?'⏳':'▶ EJECUTAR'}</button>:<span style={{ fontSize:10, color:'#334155' }}>—</span>}</td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        );
-      })}
-      {data?.news_summary && <VigiaResumenCRT summary={data.news_summary} procesando={ejecutandoNoticias||ejecutandoResumen} />}
+
+      {/* ══════════════════════════════════════
+          [FASE 3] MÓDULO IGP — toggle
+      ══════════════════════════════════════ */}
+      {vistaIGP ? (
+        <ModuloIGP apiBase={API_BASE} token={tokenStr} />
+      ) : (
+        <>
+          {['sismo','alerta','boya','noticias'].map(tipo => {
+            const fuentes  = ordenarFuentes(sr.filter(s=>s.source_type===tipo));
+            if (!fuentes.length) return null;
+            const esNoticias = tipo==='noticias';
+            return (
+              <div key={tipo} style={{ marginBottom:18 }}>
+                <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:8, paddingBottom:4, borderBottom:'1px solid #1e3a5f' }}>
+                  <div style={{ fontSize:11, fontWeight:700, color:'#f59e0b', letterSpacing:2 }}>{catLabels[tipo]}</div>
+                  {esNoticias && <button onClick={ejecutarNoticias} disabled={ejecutandoNoticias} style={{ padding:'4px 12px', borderRadius:5, border:'1px solid #f59e0b66', background:'#f59e0b18', color:'#fbbf24', fontSize:10, cursor:'pointer', fontFamily:'inherit', fontWeight:700 }}>{ejecutandoNoticias?'⏳ Ejecutando...':'▶ EJECUTAR NOTICIAS (BBC · NYT · WaPo)'}</button>}
+                </div>
+                <div style={{ borderRadius:8, overflow:'hidden', border:'1px solid #1e3a5f44' }}>
+                  <table style={{ width:'100%', borderCollapse:'collapse', background:'#0d1a2e' }}>
+                    <thead><tr style={{ background:'#0a1628' }}>{['Estado','Fuente','País','Descripción','Último fetch','Acción'].map(h=><th key={h} style={{ padding:'8px 12px', fontSize:9, fontWeight:700, color:'#64748b', textAlign:'left', borderBottom:'1px solid #1e3a5f', letterSpacing:1, whiteSpace:'nowrap' }}>{h}</th>)}</tr></thead>
+                    <tbody>
+                      {fuentes.map((s,idx) => {
+                        const estado=getEstado(s), cfg=CFG[estado];
+                        const lastFetch=s.last_fetch?new Date(s.last_fetch).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'—';
+                        const puedeEjecutar=(estado==='error'||estado==='iniciando')&&!esNoticias;
+                        return (
+                          <tr key={s.id} style={{ borderBottom:'1px solid #1e3a5f22', background:idx%2===0?'#0d1a2e':'#0a1628' }}>
+                            <td style={{ padding:'10px 12px', whiteSpace:'nowrap' }}>
+                              <div style={{ display:'inline-flex', alignItems:'center', gap:6, padding:'5px 10px', borderRadius:6, background:cfg.bg, border:`1px solid ${cfg.border}` }}>
+                                <span style={{ fontSize:14, display:'inline-block', animation:cfg.anim!=='none'?cfg.anim:undefined }}>{cfg.icono}</span>
+                                <span style={{ fontSize:10, fontWeight:700, color:cfg.color }}>{cfg.label}</span>
+                                {cfg.pulso && <div style={{ width:6, height:6, borderRadius:'50%', background:'#22c55e', animation:'pulse-dot 1.5s infinite' }}/>}
+                              </div>
+                            </td>
+                            <td style={{ padding:'10px 12px' }}><div style={{ fontSize:13, fontWeight:700, color:'#fbbf24' }}>{s.name}</div><div style={{ fontSize:9, color:'#475569', marginTop:2 }}>{s.id} · {s.alcance||s.country||'—'}</div></td>
+                            <td style={{ padding:'10px 12px', fontSize:11, color:'#94a3b8', whiteSpace:'nowrap' }}>{s.country||'—'}</td>
+                            <td style={{ padding:'10px 12px', fontSize:11, color:'#cbd5e1', lineHeight:1.5, maxWidth:340 }}>{s.descripcion||<span style={{ color:'#334155', fontStyle:'italic' }}>Sin descripción</span>}</td>
+                            <td style={{ padding:'10px 12px', fontSize:10, color:lastFetch==='—'?'#334155':'#64748b', whiteSpace:'nowrap' }}>{lastFetch}</td>
+                            <td style={{ padding:'10px 12px', whiteSpace:'nowrap' }}>{puedeEjecutar?<button onClick={ejecutarFetchGeneral} disabled={ejecutandoFetch} style={{ padding:'4px 10px', borderRadius:5, border:`1px solid ${cfg.color}66`, background:`${cfg.color}18`, color:cfg.color, fontSize:10, cursor:'pointer', fontFamily:'inherit', fontWeight:700 }}>{ejecutandoFetch?'⏳':'▶ EJECUTAR'}</button>:<span style={{ fontSize:10, color:'#334155' }}>—</span>}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            );
+          })}
+          {data?.news_summary && <VigiaResumenCRT summary={data.news_summary} procesando={ejecutandoNoticias||ejecutandoResumen} />}
+        </>
+      )}
     </div>
   );
 }
@@ -1089,12 +1109,12 @@ function UsersTab() {
    ════════════════════════════════════════════ */
 export default function App() {
   const { session, userProfile, role, isAdmin, logout } = useAuth();
-  const [data,       setData]       = useState(null);
-  const [loading,    setLoading]    = useState(true);
-  const [error,      setError]      = useState(null);
-  const [tab,        setTab]        = useState('mapa');
-  const [now,        setNow]        = useState(new Date());
-  const [focusedEqId,setFocusedEqId] = useState(null);
+  const [data,       setData]         = useState(null);
+  const [loading,    setLoading]      = useState(true);
+  const [error,      setError]        = useState(null);
+  const [tab,        setTab]          = useState('mapa');
+  const [now,        setNow]          = useState(new Date());
+  const [focusedEqId,setFocusedEqId]  = useState(null);
   const pingRef    = useRef(null);
   const focusTimer = useRef(null);
 
@@ -1145,7 +1165,6 @@ export default function App() {
 
   useEffect(() => { const i=setInterval(()=>setNow(new Date()),1000); return ()=>clearInterval(i); }, []);
 
-  // ── Pantallas de carga / login ──
   if (session === undefined) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', flexDirection:'column', gap:20, background:'#050b18' }}>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
@@ -1174,7 +1193,7 @@ export default function App() {
   const roleColor = role==='admin'?'#ef4444':role==='operador'?'#3b82f6':'#64748b';
 
   const tabs      = ['mapa','analytics','alertas','tsunami','mareografo','boyas','fuentes','umbrales','aria','vigia',...(isAdmin?['usuarios']:[])];
-  const tabColors = { aria:'#8b5cf6', vigia:'#06b6d4', analytics:'#06b6d4', mareografo:'#06b6d4', tsunami:'#00E5FF', usuarios:'#ef4444' };
+  const tabColors = { aria:'#8b5cf6', vigia:'#06b6d4', analytics:'#06b6d4', mareografo:'#06b6d4', tsunami:'#00E5FF', usuarios:'#ef4444', fuentes:'#00bfff' };
   const tabLabels = { mapa:'MAPA', analytics:'ANALYTICS', alertas:'ALERTAS', tsunami:'🌊 TSUNAMI', mareografo:'MAREOGRAFO', boyas:'BOYAS', fuentes:'FUENTES', umbrales:'UMBRALES', aria:'ARIA (IA)', vigia:'🔭 VIGIA (IA)', usuarios:'👤 USUARIOS' };
   const fullWidthTabs = new Set(['mareografo','tsunami']);
 
@@ -1264,10 +1283,10 @@ export default function App() {
             </div>
           )}
 
-          {tab==='analytics'   && <AnalyticsDashboard earthquakes={eq} buoys={bu} sources={sr} data={data} />}
-          {tab==='alertas'     && <ModuloAlertasDHN earthquakes={eq} alerts={al} kpis={k} />}
-          {tab==='tsunami'     && <div style={{ padding:16, height:'100%', overflow:'auto' }}><TsunamiTracker backendUrl="https://cnat-backend-1.onrender.com" /></div>}
-          {tab==='mareografo'  && <TideGaugeMap />}
+          {tab==='analytics'  && <AnalyticsDashboard earthquakes={eq} buoys={bu} sources={sr} data={data} />}
+          {tab==='alertas'    && <ModuloAlertasDHN earthquakes={eq} alerts={al} kpis={k} />}
+          {tab==='tsunami'    && <div style={{ padding:16, height:'100%', overflow:'auto' }}><TsunamiTracker backendUrl="https://cnat-backend-1.onrender.com" /></div>}
+          {tab==='mareografo' && <TideGaugeMap />}
 
           {tab==='boyas' && (
             <div>
@@ -1292,7 +1311,8 @@ export default function App() {
             </div>
           )}
 
-          {tab==='fuentes'   && <FuentesTab sr={sr} data={data} />}
+          {/* [FASE 3] FUENTES con ModuloIGP integrado */}
+          {tab==='fuentes'   && <FuentesTab sr={sr} data={data} session={session} />}
 
           {tab==='umbrales' && (
             <div>
@@ -1314,7 +1334,6 @@ export default function App() {
             </div>
           )}
 
-          {/* ── ARIA: módulo independiente v3.0 ── */}
           {tab==='aria'     && <ModuloARIA data={data} />}
           {tab==='vigia'    && <ModuloVIGIA data={data} />}
           {tab==='usuarios' && isAdmin && <UsersTab />}
@@ -1347,7 +1366,6 @@ export default function App() {
                 <span style={{ fontSize:9, color:'#22c55e', fontWeight:700 }}>DATOS REALES</span>
               </div>
             </div>
-            {/* AutoReport importado desde ModuloARIA */}
             <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', overflow:'auto', padding:10 }}>
               <AutoReport data={data} />
             </div>
