@@ -1267,7 +1267,7 @@ export default function App() {
       {/* ── CONTENIDO ── */}
       <div style={{
         display:'grid',
-        gridTemplateColumns: fullWidthTabs.has(tab) ? '1fr' : tab==='mapa' ? '1fr 200px 200px 360px' : '1fr 420px',
+        gridTemplateColumns: fullWidthTabs.has(tab) ? '1fr' : tab==='mapa' ? '1fr 200px 200px 340px' : '1fr 420px',
         gap:0,
         height:'calc(100vh - 220px)',
       }}>
@@ -1364,6 +1364,31 @@ export default function App() {
               <div style={{ marginTop:'auto', borderTop:'1px solid #1e3a5f', paddingTop:8, display:'flex', justifyContent:'space-between' }}>
                 <span style={{ fontSize:9, color:'#f59e0b', fontWeight:700 }}>MICROHELP v3.0</span>
                 <span style={{ fontSize:9, color:'#22c55e', fontWeight:700 }}>DATOS REALES</span>
+              </div>
+            </div>
+           <div style={{ background:'#070e1f', borderLeft:'1px solid #00bfff44', overflow:'auto', display:'flex', flexDirection:'column' }}>
+              <div style={{ padding:'10px 12px', borderBottom:'1px solid #00bfff33', display:'flex', alignItems:'center', gap:8 }}>
+                <div style={{ width:8, height:8, borderRadius:'50%', background:'#00bfff', animation:'blink 1.5s infinite' }}/>
+                <span style={{ fontSize:11, color:'#00bfff', fontWeight:700, letterSpacing:2 }}>IGP / CENSIS EN VIVO</span>
+              </div>
+              {(data?.igp_tweets||[]).length === 0
+                ? <div style={{ padding:20, textAlign:'center', color:'#334155', fontSize:11 }}>Sin reportes IGP recientes</div>
+                : (data?.igp_tweets||[]).slice(0,10).map((tw,i) => (
+                  <div key={i} style={{ padding:'10px 12px', borderBottom:'1px solid #00bfff11', borderLeft:'3px solid #00bfff' }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                      {tw.magnitude && <span style={{ fontSize:16, fontWeight:700, color:'#00bfff', fontFamily:"'Orbitron'" }}>M{tw.magnitude}</span>}
+                      <span style={{ fontSize:9, color:'#475569' }}>{new Date(tw.published_at).toLocaleTimeString('es-PE')}</span>
+                    </div>
+                    {tw.lugar     && <div style={{ fontSize:11, color:'#e2e8f0', marginBottom:2 }}>{tw.lugar}</div>}
+                    {tw.intensidad&& <div style={{ fontSize:10, color:'#94a3b8' }}>Intensidad: {tw.intensidad}</div>}
+                    {tw.depth_km  && <div style={{ fontSize:10, color:'#94a3b8' }}>Prof: {tw.depth_km} km</div>}
+                    {tw.reporte_id&& <div style={{ fontSize:9, color:'#00bfff66', marginTop:3 }}>RS {tw.reporte_id}</div>}
+                  </div>
+                ))
+              }
+              <div style={{ marginTop:'auto', padding:'8px 12px', borderTop:'1px solid #00bfff22', display:'flex', justifyContent:'space-between' }}>
+                <span style={{ fontSize:9, color:'#00bfff66' }}>@Sismos_Peru_IGP</span>
+                <span style={{ fontSize:9, color:'#22c55e', fontWeight:700 }}>● EN VIVO</span>
               </div>
             </div>
             <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', overflow:'auto', padding:10 }}>
