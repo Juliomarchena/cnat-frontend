@@ -1271,7 +1271,7 @@ export default function App() {
       {/* ── CONTENIDO ── */}
       <div style={{
         display:'grid',
-        gridTemplateColumns: fullWidthTabs.has(tab) ? '1fr' : tab==='mapa' ? '1fr 200px 200px 280px 340px' : '1fr 420px',
+        gridTemplateColumns: fullWidthTabs.has(tab) ? '1fr' : tab==='mapa' ? '1fr 1020px' : '1fr 420px',
         gap:0,
         height:'calc(100vh - 220px)',
       }}>
@@ -1345,11 +1345,21 @@ export default function App() {
 
         {/* ── SIDEBAR ── */}
         {!fullWidthTabs.has(tab) && tab==='mapa' && (
-          <>
-            <div style={{ background:'#070e1f', borderLeft:'2px solid #06b6d4', overflow:'auto', display:'flex', flexDirection:'column' }}>
+          <div style={{
+            display:'grid',
+            gridTemplateColumns:'1fr 1fr 1fr',
+            gridTemplateRows:'345px 1fr',
+            background:'#070e1f',
+            borderLeft:'1px solid #1e3a5f',
+            height:'100%',
+            overflow:'hidden',
+          }}>
+            {/* RESUMEN NUMERICO — fila superior, col 1. Fija la altura: cifras completas sin scroll */}
+            <div style={{ borderLeft:'2px solid #06b6d4', overflow:'auto' }}>
               <StatsSummary earthquakes={eq} alerts={al} buoys={bu} onFocus={focusEq} />
             </div>
-            <div style={{ background:'#070e1f', borderLeft:'2px solid #f59e0b', overflow:'auto', padding:12, display:'flex', flexDirection:'column' }}>
+            {/* FEED SISMICO — fila superior, col 2 */}
+            <div style={{ borderLeft:'2px solid #f59e0b', overflow:'auto', padding:12, display:'flex', flexDirection:'column' }}>
               <div style={{ marginBottom:8 }}>
                 <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
                   <h3 style={{ fontSize:11, color:'#f59e0b', letterSpacing:2, fontWeight:700 }}>FEED SISMICO</h3>
@@ -1376,7 +1386,8 @@ export default function App() {
                 <span style={{ fontSize:9, color:'#22c55e', fontWeight:700 }}>DATOS REALES</span>
               </div>
             </div>
-           <div style={{ background:'#070e1f', borderLeft:'2px solid #00bfff', overflow:'auto', display:'flex', flexDirection:'column' }}>
+            {/* TWEETS IGP / CENSIS — fila superior, col 3 */}
+            <div style={{ borderLeft:'2px solid #00bfff', overflow:'auto', display:'flex', flexDirection:'column' }}>
               <div style={{ padding:'10px 12px', borderBottom:'1px solid #00bfff33', display:'flex', alignItems:'center', gap:8 }}>
                 <div style={{ width:8, height:8, borderRadius:'50%', background:'#00bfff', animation:'blink 1.5s infinite' }}/>
                 <span style={{ fontSize:11, color:'#00bfff', fontWeight:700, letterSpacing:2 }}>IGP / CENSIS EN VIVO</span>
@@ -1401,10 +1412,11 @@ export default function App() {
                 <span style={{ fontSize:9, color:'#22c55e', fontWeight:700 }}>● EN VIVO</span>
               </div>
             </div>
-            <div style={{ background:'#070e1f', borderLeft:'2px solid #8b5cf6', overflow:'auto', padding:10 }}>
+            {/* VIGÍA (IA) — fila inferior, ancho completo. Texto de corrido */}
+            <div style={{ gridColumn:'1 / -1', borderTop:'2px solid #8b5cf6', overflow:'auto', padding:10 }}>
               <AutoReport data={data} />
             </div>
-          </>
+          </div>
         )}
 
         {!fullWidthTabs.has(tab) && tab!=='mapa' && (
