@@ -1,9 +1,12 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
 /**
- * AutoReport.jsx — ARIA::INFORME
+ * AutoReport.jsx — VIGÍA::ANÁLISIS  (el "piloto" del CNAT)
  * Marina de Guerra del Perú | MICROHELP © 2026
- * v3.3 — Orden cronológico, cercanos primero, fuentes múltiples
+ * v3.4 — Rol interpretativo: NO relista sismos (de eso se encarga el FEED).
+ *        Interpreta la situación, evalúa riesgo de tsunami para la costa
+ *        peruana y entrega viñetas claras + conclusión operativa.
+ *        Eliminados los símbolos ">" sueltos del contenido.
  */
 
 const CLAUDE_KEY = process.env.REACT_APP_CLAUDE_KEY || '';
@@ -15,7 +18,7 @@ function buildPrompt(data) {
     day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit'
   });
 
-  // ── Agrupar sismos del mismo evento (±10min) para mostrar TODAS las fuentes ──
+  // ── Agrupar sismos del mismo evento (±10min) para considerar todas las fuentes ──
   const grupos = {};
   eqs.filter(e => e.latitude && e.longitude && e.magnitude >= 4.0).forEach(e => {
     const t     = Math.floor(new Date(e.event_time).getTime() / (10*60*1000));
@@ -26,7 +29,7 @@ function buildPrompt(data) {
     grupos[key].push(e);
   });
 
-  // ── Calcular distancia a Lima y clasificar ──
+  // ── Calcular distancia a Lima y clasificar nivel ──
   const eventos = Object.values(grupos).map(grupo => {
     const rep  = grupo.reduce((a,b) => b.magnitude > a.magnitude ? b : a);
     const lat  = parseFloat(rep.latitude), lon = parseFloat(rep.longitude);
@@ -44,57 +47,74 @@ function buildPrompt(data) {
     return { rep, dist, nivel, fecha, fuentes, ts };
   });
 
-  // ── Separar y ordenar: cercanos cronológico desc, luego remotos cronológico desc ──
+  // ── Insumos (reciente→antiguo). NO son para copiar: son para interpretar ──
   const cercanos = eventos
     .filter(e => e.nivel !== 'REMOTO')
-    .sort((a,b) => b.ts - a.ts)  // más reciente primero
+    .sort((a,b) => b.ts - a.ts)
     .slice(0, 8);
 
   const remotos = eventos
     .filter(e => e.nivel === 'REMOTO' && e.rep.magnitude >= 5.5)
-    .sort((a,b) => b.ts - a.ts)  // más reciente primero
-    .slice(0, 4);
+    .sort((a,b) => b.ts - a.ts)
+    .slice(0, 5);
 
-  const listaCercanos = cercanos.length > 0
-    ? cercanos.map(e =>
-        `${e.fecha} | ${e.rep.place||'?'} | ~${e.dist}km Lima | P:${e.rep.depth_km}km | ${e.nivel}\n   ${e.fuentes}`
-      ).join('\n')
-    : 'Sin eventos cercanos al Perú';
+  // ── Posibles generadores de tsunami: magnitud alta + someros (≤70km) ──
+  const tsunamiSospechosos = eventos
+    .filter(e => e.rep.magnitude >= 6.5 && (!e.rep.depth_km || e.rep.depth_km <= 70))
+    .sort((a,b) => b.rep.magnitude - a.rep.magnitude)
+    .slice(0, 5);
 
-  const listaRemotos = remotos.length > 0
-    ? remotos.map(e =>
-        `${e.fecha} | ${e.rep.place||'?'} | ~${e.dist}km Lima\n   ${e.fuentes}`
-      ).join('\n')
-    : '';
+  const fmtLinea = e => `${e.fecha} | ${e.rep.place||'?'} | M${e.rep.magnitude} | P:${e.rep.depth_km}km | ~${e.dist}km de Lima | ${e.nivel}`;
 
-  return `Eres ARIA del CNAT. Genera el reporte EXACTAMENTE en este formato:
+  const insumoCercanos = cercanos.length > 0
+    ? cercanos.map(fmtLinea).join('\n')
+    : 'Sin eventos cercanos al Perú en el periodo.';
 
-🟢/🟡/🔴 ESTADO: [una frase] — ${now}
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-SISMOS CERCANOS AL PERÚ (reciente→antiguo):
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-[2 líneas por sismo:]
-DD/MM HH:MM | LUGAR | ~XXXkm Lima | P:XXkm | NIVEL
-   FUENTE1:MX.X | FUENTE2:MX.X | FUENTE3:MX.X
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-RESTO DEL MUNDO M5.5+ (reciente→antiguo):
-DD/MM HH:MM | LUGAR | ~XXXkm Lima
-   FUENTE1:MX.X | FUENTE2:MX.X
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-BOYAS:${k.alert_buoys||0}/${k.total_buoys||0} | FUENTES:${k.sources_online||0}/${k.total_sources||0} | DHN:${k.risk_level||'BAJO'}
-RECOMENDACIÓN: [una línea]
+  const insumoRemotos = remotos.length > 0
+    ? remotos.map(fmtLinea).join('\n')
+    : 'Sin eventos lejanos M5.5+ relevantes.';
 
-DATOS CERCANOS AL PERÚ (ya en orden reciente→antiguo):
-${listaCercanos}
+  const insumoTsunami = tsunamiSospechosos.length > 0
+    ? tsunamiSospechosos.map(fmtLinea).join('\n')
+    : 'Ninguno: no hay sismos M6.5+ someros en el periodo.';
 
-${listaRemotos ? `DATOS REMOTOS M5.5+ (ya en orden reciente→antiguo):\n${listaRemotos}` : ''}
+  return `Eres VIGÍA, el analista de guardia del CNAT (Marina de Guerra del Perú).
 
-REGLAS CRÍTICAS:
-1. Usa el formato de 2 líneas por sismo EXACTAMENTE como se muestra
-2. Pon TODAS las fuentes con sus magnitudes en la línea 2
-3. Primero van los CERCANOS AL PERÚ, luego RESTO DEL MUNDO
-4. Dentro de cada grupo: del más reciente al más antiguo
-5. Sin markdown, sin asteriscos, sin texto adicional`;
+TU ROL: NO listar sismos —de eso se encarga el panel FEED SÍSMICO—. Tu trabajo es
+INTERPRETAR la situación a nivel nacional y decidir si algún sismo (cercano o lejano)
+representa RIESGO DE TSUNAMI para la costa peruana, y recomendar una acción.
+
+Responde EXACTAMENTE en este formato, en español, sin markdown, sin asteriscos y SIN el símbolo ">":
+
+🟢 ESTADO: [una frase con la situación general] — ${now}
+• [Interpretación general de la actividad sísmica relevante para el Perú en los últimos 7 días]
+• [Riesgo de tsunami: ¿algún sismo M6.5+ somero —cercano o lejano— puede generar olas hacia la costa peruana? Di cuál y por qué SÍ o por qué NO]
+• [Instrumentación: qué dicen las boyas DART y las fuentes activas para la toma de decisión]
+CONCLUSIÓN: [recomendación operativa en una sola línea]
+
+SEMÁFORO DEL ESTADO:
+- 🟢 si no hay amenaza de tsunami para el Perú
+- 🟡 si hay un evento que amerita vigilancia
+- 🔴 si hay amenaza de tsunami para la costa peruana
+
+REGLAS:
+1. Cada viñeta empieza con "• " y es UNA sola frase clara.
+2. NO reproduzcas la lista de sismos: interprétala.
+3. No uses el símbolo ">" en ninguna línea.
+4. Máximo 3 viñetas + la línea CONCLUSIÓN.
+
+INSUMOS PARA TU ANÁLISIS (interprétalos, no los copies):
+
+Sismos cercanos al Perú (reciente→antiguo):
+${insumoCercanos}
+
+Sismos lejanos M5.5+ (reciente→antiguo):
+${insumoRemotos}
+
+Posibles generadores de tsunami (M6.5+ y ≤70km de profundidad):
+${insumoTsunami}
+
+Instrumentación: Boyas en anomalía ${k.alert_buoys||0}/${k.total_buoys||0} | Fuentes activas ${k.sources_online||0}/${k.total_sources||0} | Nivel DHN ${k.risk_level||'BAJO'}`;
 }
 
 export default function AutoReport({ data }) {
@@ -108,7 +128,7 @@ export default function AutoReport({ data }) {
 
   useEffect(() => {
     if (!report) return;
-   const full = report;
+    const full = report;
     setDisplayText(''); setTyping(true);
     let i = 0;
     if (timerRef.current) clearInterval(timerRef.current);
@@ -165,11 +185,11 @@ export default function AutoReport({ data }) {
       }}/>
       <div style={{ position:'relative', zIndex:2 }}>
 
-        {/* Header con REFRESH arriba siempre visible */}
+        {/* Header con REFRESH siempre visible */}
         <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:6 }}>
           <div style={{ display:'flex', alignItems:'center', gap:8 }}>
             <span style={{ fontSize:11, color:'#00ff00', letterSpacing:3, fontWeight:700, fontFamily:"'Courier New',monospace", textShadow:'0 0 8px rgba(0,255,0,0.5)' }}>
-              {'>'} ARIA::INFORME
+              VIGÍA::ANÁLISIS
             </span>
             <div style={{ width:8, height:8, borderRadius:'50%', background:'#00ff00', animation:'blink 1.5s infinite', boxShadow:'0 0 6px #00ff00' }}/>
           </div>
@@ -193,6 +213,11 @@ export default function AutoReport({ data }) {
           </div>
         </div>
 
+        {/* Subtítulo de rol */}
+        <div style={{ fontSize:8, color:'#00ff0055', fontFamily:"'Courier New',monospace", letterSpacing:1, marginBottom:5 }}>
+          EL PILOTO · INTERPRETA · NO RELISTA · RIESGO DE TSUNAMI PARA PERÚ
+        </div>
+
         {/* Contenido CRT */}
         <div style={{ borderTop:'1px solid #00ff0022', paddingTop:5 }}>
           <div style={{
@@ -201,15 +226,15 @@ export default function AutoReport({ data }) {
             letterSpacing:0.3, minHeight:60,
           }}>
             {loading&&!displayText
-              ? '> Conectando con ARIA...\n> Analizando sismos cercanos al Perú...'
-              : displayText||'> Iniciando...'}
+              ? 'Conectando con VIGÍA...\nAnalizando situación sísmica del Perú...'
+              : displayText||'Iniciando análisis...'}
             {typing&&<span style={{ animation:'blink 0.4s infinite', color:'#00ff00', textShadow:'0 0 8px #00ff00' }}>█</span>}
           </div>
         </div>
 
         {/* Footer */}
         <div style={{ borderTop:'1px solid #00ff0015', marginTop:6, paddingTop:4, display:'flex', justifyContent:'space-between' }}>
-          <span style={{ fontSize:8, color:'#00ff0044', fontFamily:"'Courier New',monospace" }}>CNAT::ARIA::v3.3 | Auto:5min</span>
+          <span style={{ fontSize:8, color:'#00ff0044', fontFamily:"'Courier New',monospace" }}>CNAT::VIGÍA::v3.4 | Auto:5min</span>
           <span style={{ fontSize:8, color:'#00ff0044', fontFamily:"'Courier New',monospace" }}>Claude AI</span>
         </div>
       </div>

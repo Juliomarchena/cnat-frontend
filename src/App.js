@@ -99,9 +99,13 @@ function StatsSummary({ earthquakes = [], alerts = [], buoys = [], onFocus }) {
     return m < 60 ? `${m}min` : m < 1440 ? `${Math.floor(m/60)}h${m%60}m` : `${Math.floor(m/1440)}d`;
   };
 
+  const fmtDia     = d => new Date(d).toLocaleDateString('es-PE', { day:'2-digit', month:'2-digit' });
+  const periodoStr = `${fmtDia(Date.now() - 7*86400000)} — ${fmtDia(Date.now())}`;
+
   return (
     <div style={{ padding:12, borderBottom:'1px solid #1e3a5f' }}>
-      <div style={{ fontSize:11, color:'#fbbf24', letterSpacing:2, fontWeight:700, marginBottom:8 }}>RESUMEN NUMERICO</div>
+      <div style={{ fontSize:11, color:'#06b6d4', letterSpacing:2, fontWeight:700, marginBottom:3 }}>RESUMEN NUMERICO</div>
+      <div style={{ fontSize:9, color:'#64748b', marginBottom:8, letterSpacing:0.5 }}>PERIODO: <span style={{ color:'#06b6d4', fontWeight:700 }}>{periodoStr}</span> · últimos 7 días</div>
       {lastSig && (
         <div
           onClick={() => onFocus && onFocus(lastSig.id)}
@@ -321,7 +325,7 @@ function PacificMapLeaflet({ earthquakes=[], buoys=[], focusedEqId=null, onClear
       document.head.appendChild(link);
     }
     const L = require('leaflet');
-    const map = L.map(mapRef.current, { center:[10,-150], zoom:3, minZoom:2, maxZoom:10, zoomControl:true, attributionControl:false });
+    const map = L.map(mapRef.current, { center:[-15,-60], zoom:3, minZoom:2, maxZoom:10, zoomControl:true, attributionControl:false });
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains:'abcd', maxZoom:19 }).addTo(map);
     L.control.attribution({ position:'bottomright', prefix:false }).addAttribution('CNAT - MICROHELP | CartoDB').addTo(map);
     mapInstanceRef.current = map;
@@ -1277,7 +1281,7 @@ export default function App() {
           {tab==='mapa' && (
             <div style={{ display:'flex', flexDirection:'column', height:'100%' }}>
               <div style={{ flex:1, overflow:'hidden', minHeight:0 }}>
-                <PacificMapLeaflet earthquakes={eq.filter(e => (Date.now() - new Date(e.event_time).getTime()) / 86400000 <= 3)} buoys={bu} focusedEqId={focusedEqId} onClearFocus={clearFocus} />
+                <PacificMapLeaflet earthquakes={eq.filter(e => (Date.now() - new Date(e.event_time).getTime()) / 86400000 <= 7)} buoys={bu} focusedEqId={focusedEqId} onClearFocus={clearFocus} />
               </div>
               <MapLegend />
             </div>
@@ -1342,22 +1346,28 @@ export default function App() {
         {/* ── SIDEBAR ── */}
         {!fullWidthTabs.has(tab) && tab==='mapa' && (
           <>
-            <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', overflow:'auto', display:'flex', flexDirection:'column' }}>
+            <div style={{ background:'#070e1f', borderLeft:'2px solid #06b6d4', overflow:'auto', display:'flex', flexDirection:'column' }}>
               <StatsSummary earthquakes={eq} alerts={al} buoys={bu} onFocus={focusEq} />
-              <PanelIGP tweets={data?.igp_tweets || []} />
             </div>
-            <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', overflow:'auto', padding:12, display:'flex', flexDirection:'column' }}>
-              <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
-                <h3 style={{ fontSize:11, color:'#fbbf24', letterSpacing:2, fontWeight:700 }}>FEED SISMICO</h3>
-                <div style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', animation:'blink 2s infinite' }}/>
+            <div style={{ background:'#070e1f', borderLeft:'2px solid #f59e0b', overflow:'auto', padding:12, display:'flex', flexDirection:'column' }}>
+              <div style={{ marginBottom:8 }}>
+                <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}>
+                  <h3 style={{ fontSize:11, color:'#f59e0b', letterSpacing:2, fontWeight:700 }}>FEED SISMICO</h3>
+                  <div style={{ width:7, height:7, borderRadius:'50%', background:'#22c55e', animation:'blink 2s infinite' }}/>
+                </div>
+                <div style={{ fontSize:8, color:'#64748b', marginTop:2 }}>7 días · fuentes ≠ IGP · reciente → antiguo</div>
               </div>
-              {[...eq].sort((a,b)=>b.magnitude-a.magnitude).slice(0,100).map(e => {
+              {[...eq]
+                .filter(e => (Date.now() - new Date(e.event_time).getTime())/86400000 <= 7)
+                .filter(e => !(e.source_id||'').toLowerCase().includes('igp'))
+                .sort((a,b) => new Date(b.event_time) - new Date(a.event_time))
+                .slice(0,100).map(e => {
                 const c=sevColor(e.severity), isFocused=e.id===focusedEqId;
                 return (
                   <div key={e.id} onClick={()=>focusEq(e.id)} style={{ padding:'6px 8px', borderRadius:6, marginBottom:4, borderLeft:`3px solid ${c}`, background:isFocused?'#1e3a5f44':'#0d1a2e44', cursor:'pointer', outline:isFocused?`1px solid ${c}`:'none', transition:'background 0.2s' }} title="Ver en mapa">
-                    <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ fontSize:13, fontWeight:700, color:c, fontFamily:"'Orbitron'" }}>M{e.magnitude}</span><span style={{ fontSize:8, color:'#94a3b8' }}>{new Date(e.event_time).toLocaleTimeString('es-PE')}</span></div>
+                    <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}><span style={{ fontSize:13, fontWeight:700, color:c, fontFamily:"'Orbitron'" }}>M{e.magnitude}</span><span style={{ fontSize:8, color:'#94a3b8' }}>{new Date(e.event_time).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>
                     <div style={{ fontSize:9, color:'#cbd5e1', marginTop:1 }}>{e.place}</div>
-                    <div style={{ display:'flex', gap:6, marginTop:1 }}><span style={{ fontSize:8, color:'#94a3b8' }}>Prof:{e.depth_km}km</span><span style={{ fontSize:8, color:'#94a3b8' }}>{e.source_id?.toUpperCase()}</span></div>
+                    <div style={{ display:'flex', gap:6, marginTop:2, alignItems:'center' }}><span style={{ fontSize:8, color:'#94a3b8' }}>Prof:{e.depth_km}km</span><span style={{ fontSize:8, color:'#f59e0b', fontWeight:700, background:'#f59e0b18', padding:'1px 5px', borderRadius:3, letterSpacing:0.5 }}>{(e.source_id||'?').toUpperCase()}</span></div>
                   </div>
                 );
               })}
@@ -1366,7 +1376,7 @@ export default function App() {
                 <span style={{ fontSize:9, color:'#22c55e', fontWeight:700 }}>DATOS REALES</span>
               </div>
             </div>
-           <div style={{ background:'#070e1f', borderLeft:'1px solid #00bfff44', overflow:'auto', display:'flex', flexDirection:'column' }}>
+           <div style={{ background:'#070e1f', borderLeft:'2px solid #00bfff', overflow:'auto', display:'flex', flexDirection:'column' }}>
               <div style={{ padding:'10px 12px', borderBottom:'1px solid #00bfff33', display:'flex', alignItems:'center', gap:8 }}>
                 <div style={{ width:8, height:8, borderRadius:'50%', background:'#00bfff', animation:'blink 1.5s infinite' }}/>
                 <span style={{ fontSize:11, color:'#00bfff', fontWeight:700, letterSpacing:2 }}>IGP / CENSIS EN VIVO</span>
@@ -1377,7 +1387,7 @@ export default function App() {
                   <div key={i} style={{ padding:'10px 12px', borderBottom:'1px solid #00bfff11', borderLeft:'3px solid #00bfff' }}>
                     <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                       {tw.magnitude && <span style={{ fontSize:16, fontWeight:700, color:'#00bfff', fontFamily:"'Orbitron'" }}>M{tw.magnitude}</span>}
-                      <span style={{ fontSize:9, color:'#475569' }}>{new Date(tw.published_at).toLocaleTimeString('es-PE')}</span>
+                      <span style={{ fontSize:9, color:'#475569' }}>{new Date(tw.published_at).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>
                     </div>
                     {tw.lugar     && <div style={{ fontSize:11, color:'#e2e8f0', marginBottom:2 }}>{tw.lugar}</div>}
                     {tw.intensidad&& <div style={{ fontSize:10, color:'#94a3b8' }}>Intensidad: {tw.intensidad}</div>}
@@ -1391,7 +1401,7 @@ export default function App() {
                 <span style={{ fontSize:9, color:'#22c55e', fontWeight:700 }}>● EN VIVO</span>
               </div>
             </div>
-            <div style={{ background:'#070e1f', borderLeft:'1px solid #1e3a5f', overflow:'auto', padding:10 }}>
+            <div style={{ background:'#070e1f', borderLeft:'2px solid #8b5cf6', overflow:'auto', padding:10 }}>
               <AutoReport data={data} />
             </div>
           </>
@@ -1409,13 +1419,17 @@ export default function App() {
                   <h3 style={{ fontSize:12, color:'#fbbf24', letterSpacing:2, fontWeight:700 }}>FEED SISMICO</h3>
                   <div style={{ width:8, height:8, borderRadius:'50%', background:'#22c55e', animation:'blink 2s infinite' }}/>
                 </div>
-                {[...eq].sort((a,b)=>b.magnitude-a.magnitude).slice(0,100).map(e => {
+                {[...eq]
+                  .filter(e => (Date.now() - new Date(e.event_time).getTime())/86400000 <= 7)
+                  .filter(e => !(e.source_id||'').toLowerCase().includes('igp'))
+                  .sort((a,b) => new Date(b.event_time) - new Date(a.event_time))
+                  .slice(0,100).map(e => {
                   const c=sevColor(e.severity), isFocused=e.id===focusedEqId;
                   return (
                     <div key={e.id} onClick={()=>focusEq(e.id)} style={{ padding:'7px 10px', borderRadius:6, marginBottom:4, borderLeft:`4px solid ${c}`, background:isFocused?'#1e3a5f44':'#0d1a2e44', cursor:'pointer', outline:isFocused?`1px solid ${c}`:'none', transition:'background 0.2s' }} title="Ver en mapa">
-                      <div style={{ display:'flex', justifyContent:'space-between' }}><span style={{ fontSize:14, fontWeight:700, color:c, fontFamily:"'Orbitron'" }}>M{e.magnitude}</span><span style={{ fontSize:9, color:'#94a3b8' }}>{new Date(e.event_time).toLocaleTimeString('es-PE')}</span></div>
+                      <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center' }}><span style={{ fontSize:14, fontWeight:700, color:c, fontFamily:"'Orbitron'" }}>M{e.magnitude}</span><span style={{ fontSize:9, color:'#94a3b8' }}>{new Date(e.event_time).toLocaleString('es-PE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span></div>
                       <div style={{ fontSize:10, color:'#cbd5e1', marginTop:2 }}>{e.place}</div>
-                      <div style={{ display:'flex', gap:8, marginTop:2 }}><span style={{ fontSize:9, color:'#94a3b8' }}>Prof:{e.depth_km}km</span><span style={{ fontSize:9, color:'#94a3b8' }}>{e.source_id?.toUpperCase()}</span></div>
+                      <div style={{ display:'flex', gap:8, marginTop:2, alignItems:'center' }}><span style={{ fontSize:9, color:'#94a3b8' }}>Prof:{e.depth_km}km</span><span style={{ fontSize:9, color:'#f59e0b', fontWeight:700, background:'#f59e0b18', padding:'1px 6px', borderRadius:3, letterSpacing:0.5 }}>{(e.source_id||'?').toUpperCase()}</span></div>
                     </div>
                   );
                 })}
