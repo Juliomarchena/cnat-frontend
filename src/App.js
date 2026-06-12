@@ -87,6 +87,8 @@ function StatsSummary({ earthquakes = [], alerts = [], buoys = [], onFocus }) {
   const magAvg  = mags.length   ? mags.reduce((a,b)=>a+b,0)/mags.length : 0;
   const depthAvg= depths.length ? depths.reduce((a,b)=>a+b,0)/depths.length : 0;
   const depthMax= depths.length ? Math.max(...depths) : 0;
+  const eqMagMax   = mags.length   ? earthquakes.reduce((a,b)=> (b.magnitude||0) > (a.magnitude||0) ? b : a) : null;
+  const eqDepthMax = depths.length ? earthquakes.reduce((a,b)=> (b.depth_km||0)  > (a.depth_km||0)  ? b : a) : null;
   const critical = earthquakes.filter(e => e.severity === 'critical').length;
   const warning  = earthquakes.filter(e => e.severity === 'warning').length;
   const moderate = earthquakes.filter(e => e.severity === 'moderate').length;
@@ -100,12 +102,14 @@ function StatsSummary({ earthquakes = [], alerts = [], buoys = [], onFocus }) {
   };
 
   const fmtDia     = d => new Date(d).toLocaleDateString('es-PE', { day:'2-digit', month:'2-digit' });
+  const fmtFecha   = d => new Date(d).toLocaleString('es-PE', { day:'2-digit', month:'2-digit', hour:'2-digit', minute:'2-digit' });
   const periodoStr = `${fmtDia(Date.now() - 7*86400000)} — ${fmtDia(Date.now())}`;
 
   return (
     <div style={{ padding:12, borderBottom:'1px solid #1e3a5f' }}>
       <div style={{ fontSize:11, color:'#06b6d4', letterSpacing:2, fontWeight:700, marginBottom:3 }}>RESUMEN NUMERICO</div>
-      <div style={{ fontSize:9, color:'#64748b', marginBottom:8, letterSpacing:0.5 }}>PERIODO: <span style={{ color:'#06b6d4', fontWeight:700 }}>{periodoStr}</span> · últimos 7 días</div>
+      <div style={{ fontSize:9, color:'#64748b', marginBottom:2, letterSpacing:0.5 }}>PERIODO: <span style={{ color:'#06b6d4', fontWeight:700 }}>{periodoStr}</span> · últimos 7 días</div>
+      <div style={{ fontSize:8, color:'#475569', marginBottom:8, letterSpacing:0.5 }}>↻ se actualiza cada 30s</div>
       {lastSig && (
         <div
           onClick={() => onFocus && onFocus(lastSig.id)}
@@ -128,10 +132,10 @@ function StatsSummary({ earthquakes = [], alerts = [], buoys = [], onFocus }) {
       <table style={{ width:'100%', borderCollapse:'collapse' }}>
         <tbody>
           {[
-            ['Mag. maxima',   magMax.toFixed(1),   magMax >= 6 ? '#ef4444' : '#f59e0b'],
+            ['Mag. maxima',   magMax.toFixed(1),   magMax >= 6 ? '#ef4444' : '#f59e0b', eqMagMax],
             ['Mag. promedio', magAvg.toFixed(1),   '#06b6d4'],
             ['Prof. promedio',`${depthAvg.toFixed(0)}km`, '#8b5cf6'],
-            ['Prof. maxima',  `${depthMax.toFixed(0)}km`, '#8b5cf6'],
+            ['Prof. maxima',  `${depthMax.toFixed(0)}km`, '#8b5cf6', eqDepthMax],
             [null],
             ['Criticos M7.5+', critical, critical > 0 ? '#ef4444' : '#22c55e'],
             ['Alerta M6.0+',   warning,  warning  > 0 ? '#f59e0b' : '#22c55e'],
@@ -140,14 +144,26 @@ function StatsSummary({ earthquakes = [], alerts = [], buoys = [], onFocus }) {
             [null],
             ['Boyas anomalia', `${buoys.filter(b=>b.status!=='normal').length}/${buoys.length}`, buoys.some(b=>b.status!=='normal')?'#ef4444':'#22c55e'],
             ['Alertas tsunami', alerts.length, alerts.length > 0 ? '#ef4444' : '#22c55e'],
-          ].map((r, i) =>
-            r[0] === null
-              ? <tr key={i}><td colSpan={2} style={{ height:4 }}></td></tr>
-              : <tr key={i}>
-                  <td style={{ padding:'3px 0', fontSize:10, color:'#94a3b8' }}>{r[0]}</td>
+          ].map((r, i) => {
+            if (r[0] === null) return <tr key={i}><td colSpan={2} style={{ height:4 }}></td></tr>;
+            const ev = r[3];
+            const click = ev && onFocus ? () => onFocus(ev.id) : undefined;
+            return (
+              <React.Fragment key={i}>
+                <tr onClick={click} title={ev ? `${ev.place} · ${fmtFecha(ev.event_time)} · ver en mapa` : undefined} style={ev ? { cursor:'pointer' } : undefined}>
+                  <td style={{ padding:'3px 0', fontSize:10, color:'#94a3b8' }}>{r[0]}{ev && <span style={{ color:'#475569', fontSize:8 }}> ▶</span>}</td>
                   <td style={{ padding:'3px 0', fontSize:12, color:r[2], fontWeight:700, textAlign:'right', fontFamily:"'Orbitron'" }}>{r[1]}</td>
                 </tr>
-          )}
+                {ev && (
+                  <tr onClick={click} style={{ cursor:'pointer' }}>
+                    <td colSpan={2} style={{ padding:'0 0 4px', fontSize:8, color:'#64748b', lineHeight:1.3 }}>
+                      {ev.place} · {fmtFecha(ev.event_time)}
+                    </td>
+                  </tr>
+                )}
+              </React.Fragment>
+            );
+          })}
         </tbody>
       </table>
     </div>
