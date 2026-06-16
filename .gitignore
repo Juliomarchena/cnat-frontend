@@ -7,3 +7,6 @@ CLAUDE_CNAT_FRONTEND.md
 
 # Backups locales (FASE 3 y futuras)
 *.backup_*
+
+# Artefactos del CLI de Supabase
+supabase/.temp/
