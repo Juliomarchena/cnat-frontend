@@ -252,7 +252,7 @@ export default function ModuloARIA({ data }) {
           'anthropic-dangerous-direct-browser-access': 'true',
         },
         body: JSON.stringify({
-          model:      'claude-sonnet-4-20250514',
+          model:      'claude-sonnet-4-6',
           max_tokens: 2000,
           system:     buildSystemPrompt(data),
           messages:   newMsgs.map(m => ({ role: m.role, content: m.content })),
