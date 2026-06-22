@@ -3,13 +3,16 @@ import React, { useState, useCallback, useEffect, useRef } from 'react';
 /**
  * AutoReport.jsx — VIGÍA::ANÁLISIS  (el "piloto" del CNAT)
  * Marina de Guerra del Perú | MICROHELP © 2026
- * v3.4 — Rol interpretativo: NO relista sismos (de eso se encarga el FEED).
+ * v3.5 — Seguridad: la llamada a Claude pasa por la Edge Function "aria"
+ *        (la API key ya NO vive en el navegador; eliminado REACT_APP_CLAUDE_KEY).
+ *        Rol interpretativo: NO relista sismos (de eso se encarga el FEED).
  *        Interpreta la situación, evalúa riesgo de tsunami para la costa
  *        peruana y entrega viñetas claras + conclusión operativa.
- *        Eliminados los símbolos ">" sueltos del contenido.
  */
 
-const CLAUDE_KEY = process.env.REACT_APP_CLAUDE_KEY || '';
+// ─── Endpoint seguro: Edge Function "aria" (proxy del lado servidor) ───
+const ARIA_ENDPOINT =
+  'https://zgcjggfbdpfbmivwqjvt.supabase.co/functions/v1/aria';
 
 function buildPrompt(data) {
   const k   = data?.kpis        || {};
@@ -143,20 +146,18 @@ export default function AutoReport({ data }) {
     if (!data?.earthquakes?.length) return;
     setLoading(true); setDisplayText(''); setReport('');
     try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
+      // ── Llamada SEGURA: pasa por la Edge Function "aria" (no expone la llave) ──
+      const r = await fetch(ARIA_ENDPOINT, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json', 'x-api-key': CLAUDE_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model: 'claude-sonnet-4-6', max_tokens: 500,
-          messages: [{ role: 'user', content: buildPrompt(data) }],
+          messages:   [{ role: 'user', content: buildPrompt(data) }],
+          max_tokens: 500,
         }),
       });
       const d = await r.json();
-      setReport((d.content?.[0]?.text||'Error').split('\n').filter(l=>l.trim()).join('\n'));
+      const texto = d.response || d.error || 'Error';
+      setReport(texto.split('\n').filter(l=>l.trim()).join('\n'));
       setLastUpdate(new Date());
     } catch(e) { setReport(`Error: ${e.message}`); }
     setLoading(false);
@@ -234,7 +235,7 @@ export default function AutoReport({ data }) {
 
         {/* Footer */}
         <div style={{ borderTop:'1px solid #00ff0015', marginTop:6, paddingTop:4, display:'flex', justifyContent:'space-between' }}>
-          <span style={{ fontSize:8, color:'#00ff0044', fontFamily:"'Courier New',monospace" }}>CNAT::VIGÍA::v3.4 | Auto:5min</span>
+          <span style={{ fontSize:8, color:'#00ff0044', fontFamily:"'Courier New',monospace" }}>CNAT::VIGÍA::v3.5 | Auto:5min</span>
           <span style={{ fontSize:8, color:'#00ff0044', fontFamily:"'Courier New',monospace" }}>Claude AI</span>
         </div>
       </div>
