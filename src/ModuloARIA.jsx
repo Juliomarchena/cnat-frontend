@@ -6,14 +6,18 @@ import AutoReport from './AutoReport';
  * ARIA — Asistente IA del CNAT
  * Marina de Guerra del Perú | MICROHELP © 2026
  *
- * v3.0 — Módulo independizado desde App.js
+ * v3.1 — Seguridad: la llamada a Claude pasa por la Edge Function "aria"
+ * - La API key ya NO vive en el navegador (eliminado REACT_APP_CLAUDE_KEY)
+ * - El frontend arma el prompt y la Edge Function le agrega la llave (secret servidor)
  * - Prompt con jerarquía de PRIMERA PLANA para sismos cercanos al Perú
  * - AutoReport integrado con polling automático cada 5 minutos
  * - Lógica de proximidad geográfica al Perú
  * - Distinción clara: evento LOCAL vs evento REMOTO
  */
 
-const CLAUDE_KEY = process.env.REACT_APP_CLAUDE_KEY || '';
+// ─── Endpoint seguro: Edge Function "aria" (proxy del lado servidor) ───
+const ARIA_ENDPOINT =
+  'https://zgcjggfbdpfbmivwqjvt.supabase.co/functions/v1/aria';
 
 // ─── Coordenadas de referencia del Perú ───
 const PERU_CENTER = { lat: -9.19, lon: -75.01 };
@@ -243,25 +247,20 @@ export default function ModuloARIA({ data }) {
     setLoading(true);
 
     try {
-      const r = await fetch('https://api.anthropic.com/v1/messages', {
+      // ── Llamada SEGURA: pasa por la Edge Function "aria" (no expone la llave) ──
+      const r = await fetch(ARIA_ENDPOINT, {
         method: 'POST',
-        headers: {
-          'Content-Type':  'application/json',
-          'x-api-key':     CLAUDE_KEY,
-          'anthropic-version': '2023-06-01',
-          'anthropic-dangerous-direct-browser-access': 'true',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          model:      'claude-sonnet-4-6',
-          max_tokens: 2000,
           system:     buildSystemPrompt(data),
           messages:   newMsgs.map(m => ({ role: m.role, content: m.content })),
+          max_tokens: 2000,
         }),
       });
       const d = await r.json();
       setMessages(prev => [
         ...prev,
-        { role: 'assistant', content: d.content?.[0]?.text || JSON.stringify(d) },
+        { role: 'assistant', content: d.response || d.error || JSON.stringify(d) },
       ]);
     } catch (e) {
       setMessages(prev => [
