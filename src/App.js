@@ -342,8 +342,8 @@ function PacificMapLeaflet({ earthquakes=[], buoys=[], focusedEqId=null, onClear
     }
     const L = require('leaflet');
     const map = L.map(mapRef.current, { center:[-15,-60], zoom:3, minZoom:2, maxZoom:10, zoomControl:true, attributionControl:false });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains:'abcd', maxZoom:19 }).addTo(map);
-    L.control.attribution({ position:'bottomright', prefix:false }).addAttribution('CNAT - MICROHELP | CartoDB').addTo(map);
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${process.env.REACT_APP_CARTO_KEY}`, { subdomains:'abcd', maxZoom:19 }).addTo(map);
+    L.control.attribution({ position:'bottomright', prefix:false }).addAttribution('CNAT - MICROHELP | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>').addTo(map);
     mapInstanceRef.current = map;
     return () => { if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current=null; } };
   }, []);
@@ -537,8 +537,8 @@ function TideGaugeMap() {
     }
     const L   = require('leaflet');
     const map = L.map(mapRef.current, { center:[0,-150], zoom:3, minZoom:2, maxZoom:12, zoomControl:true, attributionControl:false });
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { subdomains:'abcd', maxZoom:19 }).addTo(map);
-    L.control.attribution({ position:'bottomright', prefix:false }).addAttribution('CNAT - MICROHELP | UNESCO/IOC SLSMF').addTo(map);
+    L.tileLayer(`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${process.env.REACT_APP_CARTO_KEY}`, { subdomains:'abcd', maxZoom:19 }).addTo(map);
+    L.control.attribution({ position:'bottomright', prefix:false }).addAttribution('CNAT - MICROHELP | UNESCO/IOC SLSMF | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>').addTo(map);
     mapInstanceRef.current = map;
     return () => { if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current=null; } };
   }, [loadingStations]);
