@@ -850,6 +850,7 @@ function FuentesTab({ sr=[], data, session }) {
 
   const getEstado = s => {
     const fm = s.fetch_mode;
+    if (s.status==='retired') return 'retirada';  // retirada a propósito: no es un error
     if (!fm || fm==='pending') return 'construccion';
     if (s.status==='error') return 'error';
     if (!s.last_fetch) return fm==='daily'?'en_espera':'iniciando';
@@ -859,13 +860,14 @@ function FuentesTab({ sr=[], data, session }) {
     return 'construccion';
   };
 
-  const ORDEN = { en_linea:0, en_espera:1, iniciando:2, error:3, construccion:4 };
+  const ORDEN = { en_linea:0, en_espera:1, iniciando:2, error:3, construccion:4, retirada:5 };
   const CFG = {
     en_linea:     {label:'EN LÍNEA',       color:'#22c55e',bg:'#22c55e15',border:'#22c55e44',icono:'⚙️', anim:'spin 2s linear infinite',         pulso:true },
     en_espera:    {label:'EN ESPERA',       color:'#f59e0b',bg:'#f59e0b15',border:'#f59e0b44',icono:'⏳',anim:'hourglass 3s ease-in-out infinite',pulso:false},
     iniciando:    {label:'INICIANDO',       color:'#3b82f6',bg:'#3b82f615',border:'#3b82f644',icono:'🔄',anim:'spin 1.5s linear infinite',        pulso:false},
     error:        {label:'ERROR',           color:'#ef4444',bg:'#ef444415',border:'#ef444444',icono:'⛔',anim:'none',                             pulso:false},
     construccion: {label:'EN CONSTRUCCIÓN', color:'#475569',bg:'#47556915',border:'#47556944',icono:'🔧',anim:'none',                             pulso:false},
+    retirada:     {label:'RETIRADA',        color:'#334155',bg:'#33415515',border:'#33415544',icono:'🗄️',anim:'none',                             pulso:false},
   };
 
   const catLabels = {
@@ -1259,7 +1261,7 @@ export default function App() {
           {l:'ALERTAS', v:k.active_alerts||0,                        c:k.active_alerts>0?'#ef4444':'#22c55e'},
           {l:'CRITICOS',v:k.critical_count||0,                       c:k.critical_count>0?'#ef4444':'#22c55e'},
           {l:'BOYAS',   v:`${k.online_buoys||0}/${k.total_dart_buoys||0}`, c:k.alert_buoys>0?'#ef4444':(k.online_buoys||0)<(k.total_dart_buoys||0)?'#f59e0b':'#22c55e'},
-          {l:'FUENTES', v:`${k.sources_online||0}/${k.total_sources||0}`, c:k.sources_online>=18?'#22c55e':'#f59e0b'},
+          {l:'FUENTES', v:`${k.sources_online||0}/${k.total_sources||0}`, c:(k.sources_online||0)>=(k.total_sources||0)?'#22c55e':'#f59e0b'},
           {l:'RIESGO',  v:k.risk_level||'BAJO',                      c:rC},
         ].map((x,i) => (
           <div key={i} style={{ background:'#0d1a2e', border:`1px solid ${x.c}44`, borderRadius:8, padding:12, position:'relative' }}>
