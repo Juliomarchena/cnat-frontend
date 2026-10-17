@@ -117,7 +117,7 @@ ${insumoRemotos}
 Posibles generadores de tsunami (M6.5+ y ≤70km de profundidad):
 ${insumoTsunami}
 
-Instrumentación: Boyas en anomalía ${k.alert_buoys||0}/${k.total_buoys||0} | Fuentes activas ${k.sources_online||0}/${k.total_sources||0} | Nivel DHN ${k.risk_level||'BAJO'}`;
+Instrumentación: Boyas DART en línea ${k.online_buoys||0}/${k.total_dart_buoys||0} (en anomalía ${k.alert_buoys||0}; no afirmes el estado de boyas sin lecturas recientes) | Fuentes activas ${k.sources_online||0}/${k.total_sources||0} | Nivel DHN ${k.risk_level||'BAJO'}`;
 }
 
 export default function AutoReport({ data }) {

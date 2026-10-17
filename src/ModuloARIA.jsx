@@ -123,11 +123,17 @@ NUNCA mezcles un M6.9 en Chile con un M4.5 en Hawaii en la misma lista plana.
 Un sismo local M5.5 es MÁS URGENTE para el operador peruano que un M7.0 en Japón.
 ════════════════════════════════════════════
 
+REGLA DE BOYAS — NO AFIRMES LO QUE NO SE HA MEDIDO
+- Una boya solo puede describirse como "operativa" o "normal" si en la lista BOYAS DART figura EN LÍNEA (última lectura de menos de 8 h).
+- Si figura SIN LECTURAS RECIENTES, escribe "sin datos recientes" con la fecha de su última lectura, y no afirmes su estado.
+- Para el conteo usa exactamente el valor "Boyas DART ... en línea" de los KPIs; no lo recalcules ni lo contradigas en el texto.
+- No menciones boyas que no estén en la lista BOYAS DART.
+
 KPIs OPERACIONALES:
   Sismos totales : ${k.total_earthquakes  || 0}
   Alertas activas: ${k.active_alerts      || 0}
   Eventos críticos: ${k.critical_count   || 0}
-  Boyas DART     : ${k.alert_buoys || 0}/${k.total_buoys || 0} operativas
+  Boyas DART     : ${k.online_buoys || 0}/${k.total_dart_buoys || 0} en línea (última lectura < 8 h) | ${k.alert_buoys || 0} en anomalía
   Fuentes datos  : ${k.sources_online || 0}/${k.total_sources || 0} activas
   Nivel de riesgo: ${k.risk_level || 'BAJO'}
   DHN Alarmas    : ${k.dhn_alarma_count   || 0}
@@ -151,8 +157,8 @@ ${remotos.length > 0 ? remotos.map(e => `  • M${e.magnitude} ${e.place} (${e.d
 ALERTAS TSUNAMI ACTIVAS (${al.length}):
 ${al.length > 0 ? al.slice(0,5).map(a => `  • ${a.title}`).join('\n') : '  Sin alertas activas'}
 
-BOYAS DART:
-${bu.map(b => `  • ${b.name}: ${b.status?.toUpperCase()}`).join('\n') || '  Sin datos'}
+BOYAS DART (el estado solo es válido si figura EN LÍNEA):
+${bu.filter(b => b.source_id === 'ndbc').map(b => `  • ${b.id} ${b.name}: ${b.online ? `EN LÍNEA, estado ${b.status?.toUpperCase()}` : 'SIN LECTURAS RECIENTES'} | última lectura: ${b.last_reading_at ? new Date(b.last_reading_at).toLocaleString('es-PE') : 'nunca'}`).join('\n') || '  Sin datos'}
 
 UMBRALES DHN VIGENTES:
   ALARMA    : M7.5+ a ≤60km de costa
@@ -205,7 +211,7 @@ Sin markdown, sin bullets, sin líneas vacías. Máximo 12 palabras por línea.
 
 DATOS ACTUALES:
 Riesgo: ${k.risk_level || 'BAJO'} | Sismos: ${k.total_earthquakes || 0} | Alertas: ${k.active_alerts || 0} | Locales: ${k.local_earthquakes_count || 0}
-Boyas: ${k.alert_buoys || 0}/${k.total_buoys || 0} | Fuentes: ${k.sources_online || 0}/${k.total_sources || 0} | DHN Alarmas: ${k.dhn_alarma_count || 0}
+Boyas DART en línea: ${k.online_buoys || 0}/${k.total_dart_buoys || 0} (en anomalía: ${k.alert_buoys || 0}) | Fuentes: ${k.sources_online || 0}/${k.total_sources || 0} | DHN Alarmas: ${k.dhn_alarma_count || 0}
 
 ${eventosPrioritarios.length > 0
   ? `⚠️ PRIORITARIOS PARA PERÚ:\n${eventosPrioritarios.map(e => `M${e.magnitude} ${e.place} ~${e.prox.distKm}km prof:${e.depth_km}km`).join('\n')}`
@@ -304,7 +310,7 @@ export default function ModuloARIA({ data }) {
   <div style="font-size:11px"><span style="color:#64748b">SISMOS:</span> <b>${k.total_earthquakes || 0}</b></div>
   <div style="font-size:11px"><span style="color:#64748b">ALERTAS:</span> <b>${k.active_alerts || 0}</b></div>
   <div style="font-size:11px"><span style="color:#64748b">NIVEL DE RIESGO:</span> <b style="color:${k.risk_level === 'ALTO' ? '#dc2626' : k.risk_level === 'MEDIO' ? '#d97706' : '#16a34a'}">${k.risk_level || 'BAJO'}</b></div>
-  <div style="font-size:11px"><span style="color:#64748b">BOYAS ACTIVAS:</span> <b>${k.alert_buoys || 0}/${k.total_buoys || 0}</b></div>
+  <div style="font-size:11px"><span style="color:#64748b">BOYAS EN LÍNEA:</span> <b>${k.online_buoys || 0}/${k.total_dart_buoys || 0}</b></div>
 </div>
 <div style="padding:24px 32px">${content || '<p style="color:#94a3b8;font-style:italic">Sin consultas registradas.</p>'}</div>
 <div style="border-top:1px solid #e2e8f0;padding:12px 32px;display:flex;justify-content:space-between;font-size:9px;color:#94a3b8">

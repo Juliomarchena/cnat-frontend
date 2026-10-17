@@ -106,7 +106,7 @@ export default function ModuloVIGIA({ data }) {
   <div style="font-size:11px"><span style="color:#64748b">SISMOS:</span> <b>${k.total_earthquakes || 0}</b></div>
   <div style="font-size:11px"><span style="color:#64748b">ALERTAS:</span> <b>${k.active_alerts || 0}</b></div>
   <div style="font-size:11px"><span style="color:#64748b">NIVEL DE RIESGO:</span> <b style="color:${k.risk_level === 'ALTO' ? '#dc2626' : k.risk_level === 'MEDIO' ? '#d97706' : '#16a34a'}">${k.risk_level || 'BAJO'}</b></div>
-  <div style="font-size:11px"><span style="color:#64748b">BOYAS ACTIVAS:</span> <b>${k.alert_buoys || 0}/${k.total_buoys || 0}</b></div>
+  <div style="font-size:11px"><span style="color:#64748b">BOYAS EN LÍNEA:</span> <b>${k.online_buoys || 0}/${k.total_dart_buoys || 0}</b></div>
 </div>
 <div style="padding:24px 32px">${content || '<p style="color:#94a3b8;font-style:italic">Sin consultas registradas.</p>'}</div>
 <div style="border-top:1px solid #e2e8f0;padding:12px 32px;display:flex;justify-content:space-between;font-size:9px;color:#94a3b8">

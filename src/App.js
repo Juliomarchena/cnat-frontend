@@ -1258,7 +1258,7 @@ export default function App() {
           {l:'SISMOS',  v:k.total_earthquakes||0,                    c:'#3b82f6'},
           {l:'ALERTAS', v:k.active_alerts||0,                        c:k.active_alerts>0?'#ef4444':'#22c55e'},
           {l:'CRITICOS',v:k.critical_count||0,                       c:k.critical_count>0?'#ef4444':'#22c55e'},
-          {l:'BOYAS',   v:`${k.alert_buoys||0}/${k.total_buoys||0}`, c:k.alert_buoys>0?'#f59e0b':'#22c55e'},
+          {l:'BOYAS',   v:`${k.online_buoys||0}/${k.total_dart_buoys||0}`, c:k.alert_buoys>0?'#ef4444':(k.online_buoys||0)<(k.total_dart_buoys||0)?'#f59e0b':'#22c55e'},
           {l:'FUENTES', v:`${k.sources_online||0}/${k.total_sources||0}`, c:k.sources_online>=18?'#22c55e':'#f59e0b'},
           {l:'RIESGO',  v:k.risk_level||'BAJO',                      c:rC},
         ].map((x,i) => (
