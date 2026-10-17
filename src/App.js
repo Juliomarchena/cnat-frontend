@@ -887,7 +887,7 @@ function FuentesTab({ sr=[], data, session }) {
 
   const ejecutarFetchGeneral = async () => {
     setEjecutandoFetch(true); setMensaje('');
-    try { const token=await getToken(); await fetch(`${BACKEND}/fetch`,{headers:{Authorization:`Bearer ${token}`}}); setMensaje(`✅ Fetch general ejecutado: ${new Date().toLocaleTimeString('es-PE')}`); }
+    try { const token=await getToken(); const r=await fetch(`${BACKEND}/fetch`,{headers:{Authorization:`Bearer ${token}`}}); if(!r.ok) throw new Error(r.status); setMensaje(`✅ Fetch general ejecutado: ${new Date().toLocaleTimeString('es-PE')}`); }
     catch { setMensaje('❌ Error al ejecutar fetch'); }
     setEjecutandoFetch(false);
   };
@@ -897,9 +897,11 @@ function FuentesTab({ sr=[], data, session }) {
     try {
       const token=await getToken();
       setMensaje('⏳ Capturando noticias (BBC · NYT · WaPo)...');
-      await fetch(`${BACKEND}/fetch`,{headers:{Authorization:`Bearer ${token}`}});
+      const r1=await fetch(`${BACKEND}/fetch`,{headers:{Authorization:`Bearer ${token}`}});
+      if(!r1.ok) throw new Error(r1.status);
       setMensaje('⏳ Generando resumen VIGÍA con Claude...');
-      await fetch(`${BACKEND}/fetch-summary`,{headers:{Authorization:`Bearer ${token}`}});
+      const r2=await fetch(`${BACKEND}/fetch-summary`,{headers:{Authorization:`Bearer ${token}`}});
+      if(!r2.ok) throw new Error(r2.status);
       setMensaje(`✅ Noticias y resumen VIGÍA actualizados: ${new Date().toLocaleTimeString('es-PE')} — Recarga para ver`);
     } catch { setMensaje('❌ Error al ejecutar noticias'); }
     setEjecutandoNoticias(false);
@@ -907,7 +909,7 @@ function FuentesTab({ sr=[], data, session }) {
 
   const ejecutarResumen = async () => {
     setEjecutandoResumen(true); setMensaje('');
-    try { const token=await getToken(); await fetch(`${BACKEND}/fetch-summary`,{headers:{Authorization:`Bearer ${token}`}}); setMensaje(`✅ Resumen VIGÍA generado: ${new Date().toLocaleTimeString('es-PE')}`); }
+    try { const token=await getToken(); const r=await fetch(`${BACKEND}/fetch-summary`,{headers:{Authorization:`Bearer ${token}`}}); if(!r.ok) throw new Error(r.status); setMensaje(`✅ Resumen VIGÍA generado: ${new Date().toLocaleTimeString('es-PE')}`); }
     catch { setMensaje('❌ Error al generar resumen'); }
     setEjecutandoResumen(false);
   };
