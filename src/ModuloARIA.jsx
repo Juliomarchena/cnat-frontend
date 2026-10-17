@@ -78,7 +78,7 @@ function buildSystemPrompt(data) {
   const remotos   = enriquecidos.filter(e => e.prox.nivel === 'REMOTO').slice(0, 8);
 
   const fmt = e =>
-    `  • M${e.magnitude} | ${e.place} | Prof:${e.depth_km}km | ${e.prox.nivel} (~${e.prox.distKm}km de Perú) | DHN:${e.dhn_level || 'N/A'} | isLocal:${e.is_local}`;
+    `  • M${e.magnitude} | ${e.place} | Prof:${e.depth_km}km | ${e.prox.nivel} (~${e.prox.distKm}km del centro geográfico de Perú, NO de la costa) | DHN:${e.dhn_level || 'N/A'} | isLocal:${e.is_local}`;
 
   // ── Sección de ALERTA MÁXIMA si hay eventos urgentes ──
   const urgentes = enriquecidos.filter(e => e.prox.urgente);
@@ -87,7 +87,7 @@ function buildSystemPrompt(data) {
 ⚠️⚠️⚠️ EVENTOS DE ALTA PRIORIDAD PARA PERÚ ⚠️⚠️⚠️
 ${urgentes.map(e =>
   `🔴 M${e.magnitude} — ${e.place}
-   Distancia a Perú: ~${e.prox.distKm} km | Profundidad: ${e.depth_km} km
+   Distancia al centro geográfico de Perú (no a la costa): ~${e.prox.distKm} km | Profundidad: ${e.depth_km} km
    Nivel DHN: ${e.dhn_level || 'N/A'} | is_local: ${e.is_local}
    → ESTE EVENTO DEBE ENCABEZAR CUALQUIER BOLETÍN`
 ).join('\n')}
@@ -105,7 +105,7 @@ Cuando generes cualquier boletín o reporte, SIEMPRE sigue este orden:
 
 1. 🔴 PRIMERO: Sismos LOCALES o CERCANOS al Perú (< 800 km) con M≥5.5
    → Estos van en PRIMERA PLANA con todos los detalles
-   → Incluye: magnitud, lugar exacto, profundidad, distancia a costa peruana,
+   → Incluye: magnitud, lugar exacto, profundidad, cercanía a la costa según el texto del lugar (p. ej. "18 km SSE de Camaná"; nunca llames "distancia a costa" a los km calculados al centro del país),
      tiempo de arribo estimado si aplica, estado de boyas DART más cercanas,
      nivel de alerta DHN, recomendaciones inmediatas al operador
 
@@ -214,7 +214,7 @@ Riesgo: ${k.risk_level || 'BAJO'} | Sismos: ${k.total_earthquakes || 0} | Alerta
 Boyas DART en línea: ${k.online_buoys || 0}/${k.total_dart_buoys || 0} (en anomalía: ${k.alert_buoys || 0}) | Fuentes: ${k.sources_online || 0}/${k.total_sources || 0} | DHN Alarmas: ${k.dhn_alarma_count || 0}
 
 ${eventosPrioritarios.length > 0
-  ? `⚠️ PRIORITARIOS PARA PERÚ:\n${eventosPrioritarios.map(e => `M${e.magnitude} ${e.place} ~${e.prox.distKm}km prof:${e.depth_km}km`).join('\n')}`
+  ? `⚠️ PRIORITARIOS PARA PERÚ:\n${eventosPrioritarios.map(e => `M${e.magnitude} ${e.place} ~${e.prox.distKm}km del centro de Perú, prof:${e.depth_km}km`).join('\n')}`
   : ''}
 ${restoEventos.length > 0
   ? `Otros: ${restoEventos.map(e => `M${e.magnitude} ${e.place}`).join(' | ')}`
