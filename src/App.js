@@ -850,7 +850,7 @@ function FuentesTab({ sr=[], data, session }) {
 
   const getEstado = s => {
     const fm = s.fetch_mode;
-    if (s.status==='retired') return 'retirada';  // retirada a propósito: no es un error
+    if (s.status==='inactive') return 'retirada';  // retirada a propósito: no es un error
     if (!fm || fm==='pending') return 'construccion';
     if (s.status==='error') return 'error';
     if (!s.last_fetch) return fm==='daily'?'en_espera':'iniciando';
