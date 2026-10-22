@@ -1,5 +1,5 @@
 /**
- * TsunamiTracker.jsx — CNAT · MICROHELP v4.0
+ * TsunamiTracker.jsx — OceanWatch · MICROHELP v4.0
  * Réplica exacta del demo HTML:
  * - Proyección centrada en Pacífico (lon 100..300)
  * - GeoJSON real de continentes
@@ -10,6 +10,8 @@
  * - Countdown HUD completo
  */
 import { useState, useEffect, useRef, useCallback } from "react";
+import { supabase } from "./supabaseClient";
+import { validateEvent } from "./validacionMareografica";
 
 // ─── FÍSICA (idéntica al demo) ────────────────────────
 const G=9.81, ER=6371, OD=4000, D2R=Math.PI/180, R2D=180/Math.PI;
@@ -456,6 +458,18 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
   const[demoScenario,setDemoScenario]=useState(0);
   const[viewBox,setViewBox]=useState({x:0,y:50,w:MC.width,h:MC.height-80});
   const[worldPaths,setWorldPaths]=useState([]);
+  const[validation,setValidation]=useState(null);
+
+  // Validación con mareógrafos: solo eventos históricos (demo), nunca sismos en curso
+  useEffect(()=>{
+    if(!selectedEq||selectedEq.source!=='DEMO'||portsETA.length===0){setValidation(null);return;}
+    let cancelled=false;
+    setValidation({loading:true,rows:[]});
+    validateEvent(supabase,selectedEq,portsETA)
+      .then(rows=>{if(!cancelled)setValidation({loading:false,rows});})
+      .catch(e=>{if(!cancelled)setValidation({loading:false,rows:[],error:e.message});});
+    return()=>{cancelled=true;};
+  },[selectedEq,portsETA]);
 
   // Cargar GeoJSON mundial (mismo que tab MAPA) al montar
   useEffect(()=>{
@@ -482,7 +496,7 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
       if(dataSource==='USGS'){eqs=await fetchUSGS();}
       else{
         const res=await fetch(`${backendUrl}/api/earthquakes?min_magnitude=6.5&limit=20`);
-        if(!res.ok)throw new Error('Backend CNAT no responde');
+        if(!res.ok)throw new Error('Backend OceanWatch no responde');
         const json=await res.json();
         eqs=(json.earthquakes||json).map(e=>({
           id:e.id||e.event_id,name:e.place||'Sismo',
@@ -490,7 +504,7 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
           epicenter:{lat:parseFloat(e.latitude||e.lat)||0,lon:parseFloat(e.longitude||e.lon)||0,depth:parseFloat(e.depth)||0},
           magnitude:parseFloat(e.magnitude||e.mag)||6.5,mechanism:'Subducción (estimado)',
           faultParams:{strike:estimateStrike(parseFloat(e.latitude||e.lat)||0,parseFloat(e.longitude||e.lon)||0),dip:20,rake:90,lengthKm:200,widthKm:80,slipM:5},
-          color:'#00E5FF',source:'CNAT',usgsUrl:e.url||null,
+          color:'#00E5FF',source:'OceanWatch',usgsUrl:e.url||null,
         }));
       }
       const finalEqs=eqs.length>0?eqs:[{...DEMO_EQ,name:'REFERENCIA (sin sismos M6.5+ hoy): '+DEMO_SCENARIOS[0].name}];
@@ -618,7 +632,7 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
       <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px 18px',background:'rgba(10,21,53,0.7)',border:'1px solid rgba(212,175,55,0.2)',borderRadius:8,marginBottom:14,flexWrap:'wrap',gap:8}}>
         <div>
           <div style={{fontSize:13,letterSpacing:'2px',fontWeight:'bold',display:'flex',alignItems:'center',gap:8}}>
-            <span style={{color:'#D4AF37'}}>CNAT</span>
+            <span style={{color:'#D4AF37'}}>OceanWatch</span>
             <span style={{color:'#4A5878'}}>·</span>
             <span>SEGUIMIENTO DE TSUNAMI</span>
             {demoMode&&<span style={{fontSize:9,color:'#a78bfa',background:'rgba(167,139,250,0.12)',padding:'2px 8px',borderRadius:3,border:'1px solid rgba(167,139,250,0.35)',letterSpacing:1}}>● DEMO: {DEMO_SCENARIOS[demoScenario]?.shortName}</span>}
@@ -629,7 +643,7 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
         </div>
         <div style={{display:'flex',gap:6,flexWrap:'wrap',alignItems:'center'}}>
           <button style={sBtn(dataSource==='USGS')} onClick={()=>setDataSource('USGS')}>● USGS</button>
-          <button style={sBtn(dataSource==='CNAT','#FB8C00','rgba(251,140,0,0.1)')} onClick={()=>setDataSource('CNAT')}>● CNAT</button>
+          <button style={sBtn(dataSource==='OceanWatch','#FB8C00','rgba(251,140,0,0.1)')} onClick={()=>setDataSource('OceanWatch')}>● OceanWatch</button>
           <button style={sBtn(false,'#D4AF37')} onClick={loadEarthquakes}>↻ REFRESCAR</button>
 
           <button style={sBtn(false,'#6B7B9F')} onClick={clearAll}>↺ LIMPIAR</button>
@@ -711,14 +725,14 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
             {/* Fuente */}
             <div style={{display:'flex',gap:3,flexShrink:0}}>
               <button style={{...sBtn(dataSource==='USGS'),padding:'4px 8px',fontSize:9}} onClick={()=>setDataSource('USGS')}>USGS</button>
-              <button style={{...sBtn(dataSource==='CNAT','#FB8C00','rgba(251,140,0,0.1)'),padding:'4px 8px',fontSize:9}} onClick={()=>setDataSource('CNAT')}>CNAT</button>
+              <button style={{...sBtn(dataSource==='OceanWatch','#FB8C00','rgba(251,140,0,0.1)'),padding:'4px 8px',fontSize:9}} onClick={()=>setDataSource('OceanWatch')}>OceanWatch</button>
             </div>
 
             {/* Indicador live — empuja al extremo derecho */}
             <span style={{marginLeft:'auto',fontSize:9,color:'#22c55e',background:'rgba(34,197,94,0.08)',
               padding:'3px 8px',borderRadius:3,border:'1px solid rgba(34,197,94,0.25)',
               letterSpacing:'1px',fontFamily:F,flexShrink:0,whiteSpace:'nowrap'}}>
-              {dataSource==='USGS'?'● USGS LIVE':'● CNAT'}
+              {dataSource==='USGS'?'● USGS LIVE':'● OceanWatch'}
             </span>
           </div>
 
@@ -865,8 +879,38 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
               })}
               <div style={{fontSize:8,color:'#4A5878',marginTop:8,lineHeight:1.6,fontFamily:F}}>
                 * ~{Math.round(waveSpeedKmh())} km/h · Modelo físico + directividad focal<br/>
-                * Estimación analítica del sismo (sin lectura de boyas ni mareógrafos todavía)
+                * Estimación analítica a partir del sismo; la comparación con mareógrafos va aparte
               </div>
+            </div>
+          )}
+
+          {/* Validación con mareógrafos IOC (eventos históricos) */}
+          {validation&&(
+            <div style={panel}>
+              <div style={sT}>VALIDACIÓN CON MAREÓGRAFOS · IOC</div>
+              {validation.loading?(
+                <div style={{color:'#6B7B9F',fontSize:10,padding:8,fontFamily:F}}>Leyendo series de Supabase...</div>
+              ):validation.error?(
+                <div style={{color:'#F44336',fontSize:10,padding:8,fontFamily:F}}>No se pudo leer: {validation.error}</div>
+              ):(
+                <>
+                  <div style={{display:'grid',gridTemplateColumns:'62px 1fr 1fr 1fr',gap:4,fontSize:8,color:'#6B7B9F',marginBottom:4,padding:'0 6px',fontFamily:F}}>
+                    <span>PUERTO</span><span>ETA est/obs</span><span>ALT. v2/v1</span><span>ALT. OBS.</span>
+                  </div>
+                  {validation.rows.map(r=>(
+                    <div key={r.id} style={{display:'grid',gridTemplateColumns:'62px 1fr 1fr 1fr',gap:4,padding:'4px 6px',marginBottom:2,borderRadius:4,background:'rgba(0,0,0,0.2)',fontSize:9,fontFamily:F,alignItems:'center'}}>
+                      <span style={{color:'#E0E6F0'}}>{r.name}</span>
+                      <span style={{color:'#00E5FF'}}>{fmtHrs(r.etaEstHrs)}{r.status==='ok'?` / ${fmtHrs(r.etaObsHrs)}`:''}</span>
+                      <span style={{color:'#a78bfa'}}>{r.hEst.toFixed(2)} / {r.hLegacy.toFixed(1)} m</span>
+                      <span style={{color:r.status==='ok'?'#4CAF50':'#4A5878'}}>{r.status==='ok'?`${r.hObs.toFixed(2)} m`:r.status}</span>
+                    </div>
+                  ))}
+                  <div style={{fontSize:8,color:'#4A5878',marginTop:6,lineHeight:1.6,fontFamily:F}}>
+                    * Observado = máx. |anomalía| tras filtrar la marea (promedio móvil de 3 h); señal IOC cruda, sin datum común.<br/>
+                    * La llegada observada puede adelantarse ~30 min por el filtro. v1 = fórmula anterior (línea base).
+                  </div>
+                </>
+              )}
             </div>
           )}
 
