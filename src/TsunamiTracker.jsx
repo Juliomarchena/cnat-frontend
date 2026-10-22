@@ -516,7 +516,7 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
     const sc=DEMO_SCENARIOS[idx];
     setDemoMode(true);setDemoScenario(idx);
     setSelectedEq(sc);setPortsETA(calcETAs(sc));
-    setElapsed(0);setPlaying(true);setSpeedMult(7200);
+    setElapsed(0);setPlaying(true);setSpeedMult(900);
     setViewBox(sc.zoomVB||{x:0,y:0,w:MC.width,h:MC.height});
   };
   const clearAll=()=>{
@@ -670,6 +670,8 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
                 onChange={e=>setSpeedMult(Number(e.target.value))}
                 style={{background:'rgba(5,8,24,0.9)',border:'1px solid rgba(212,175,55,0.3)',color:'#D4AF37',
                   padding:'4px 6px',borderRadius:4,fontSize:10,fontFamily:F,cursor:'pointer'}}>
+                <option value={450}>⅛×</option>
+                <option value={900}>¼×</option>
                 <option value={1800}>½×</option>
                 <option value={3600}>1×</option>
                 <option value={7200}>2×</option>
@@ -863,7 +865,7 @@ export default function TsunamiTracker({backendUrl='https://cnat-backend-1.onren
               })}
               <div style={{fontSize:8,color:'#4A5878',marginTop:8,lineHeight:1.6,fontFamily:F}}>
                 * ~{Math.round(waveSpeedKmh())} km/h · Modelo físico + directividad focal<br/>
-                * Altura ajustable con datos de boyas DART en tiempo real
+                * Estimación analítica del sismo (sin lectura de boyas ni mareógrafos todavía)
               </div>
             </div>
           )}
