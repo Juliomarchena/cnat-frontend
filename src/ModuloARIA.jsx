@@ -3,8 +3,8 @@ import AutoReport from './AutoReport';
 
 /**
  * ModuloARIA.jsx
- * ARIA — Asistente IA del CNAT
- * Marina de Guerra del Perú | MICROHELP © 2026
+ * ARIA — Asistente IA del OceanWatch
+ * MICROHELP © 2026
  *
  * v3.1 — Seguridad: la llamada a Claude pasa por la Edge Function "aria"
  * - La API key ya NO vive en el navegador (eliminado REACT_APP_CLAUDE_KEY)
@@ -95,7 +95,7 @@ ${urgentes.map(e =>
 `
     : '(Sin eventos de alta prioridad para Perú en este momento)';
 
-  return `Eres ARIA, asistente IA del CNAT (Centro Nacional de Alerta de Tsunamis) de la Marina de Guerra del Perú.
+  return `Eres ARIA, asistente IA de OceanWatch, sistema de alerta temprana de tsunamis.
 Responde siempre en español profesional. Fecha y hora actual: ${now}.
 
 ════════════════════════════════════════════
@@ -198,7 +198,7 @@ function buildAutoReportPrompt(data) {
     .filter(e => !eventosPrioritarios.find(x => x.id === e.id))
     .slice(0, 3);
 
-  return `Genera un MICRO-REPORTE de exactamente 6 líneas para el operador de guardia del CNAT.
+  return `Genera un MICRO-REPORTE de exactamente 6 líneas para el operador de guardia del OceanWatch.
 
 REGLA CRÍTICA DE FORMATO:
 - Línea 1: Semáforo (🟢/🟡/🔴) + estado general en UNA frase
@@ -283,21 +283,21 @@ export default function ModuloARIA({ data }) {
     const content = messages.map(m => `
       <div style="margin-bottom:20px;padding:14px;border-left:4px solid ${m.role === 'user' ? '#f59e0b' : '#8b5cf6'};background:${m.role === 'user' ? '#fff8e7' : '#f8f6ff'}">
         <div style="font-size:11px;font-weight:700;color:${m.role === 'user' ? '#92400e' : '#6d28d9'};margin-bottom:8px;letter-spacing:1px">
-          ${m.role === 'user' ? 'OPERADOR' : 'ARIA — Asistente IA CNAT'}
+          ${m.role === 'user' ? 'OPERADOR' : 'ARIA — Asistente IA OceanWatch'}
         </div>
         <div style="font-size:13px;color:#1e293b;line-height:1.8;white-space:pre-wrap">${m.content}</div>
       </div>`).join('');
 
     const html = `<!DOCTYPE html>
 <html><head><meta charset="UTF-8">
-<title>Reporte ARIA - CNAT ${now}</title>
+<title>Reporte ARIA - OceanWatch ${now}</title>
 <style>body{font-family:'Courier New',monospace;margin:0;padding:0;color:#1e293b}@media print{.no-print{display:none}}</style>
 </head><body>
 <div style="background:#0a1628;padding:24px 32px;color:#fff">
   <div style="display:flex;align-items:center;gap:16px">
-    <div style="font-size:28px;font-weight:900;color:#f59e0b;letter-spacing:4px">CNAT</div>
+    <div style="font-size:28px;font-weight:900;color:#f59e0b;letter-spacing:4px">OCEANWATCH</div>
     <div>
-      <div style="font-size:11px;color:#94a3b8;letter-spacing:2px">CENTRO NACIONAL DE ALERTA DE TSUNAMIS</div>
+      <div style="font-size:11px;color:#94a3b8;letter-spacing:2px">ALERTA TEMPRANA DE TSUNAMIS</div>
       <div style="font-size:9px;color:#475569;margin-top:2px">DIRECCIÓN DE HIDROGRAFÍA Y NAVEGACIÓN — MGP</div>
     </div>
     <div style="margin-left:auto;text-align:right">
@@ -314,7 +314,7 @@ export default function ModuloARIA({ data }) {
 </div>
 <div style="padding:24px 32px">${content || '<p style="color:#94a3b8;font-style:italic">Sin consultas registradas.</p>'}</div>
 <div style="border-top:1px solid #e2e8f0;padding:12px 32px;display:flex;justify-content:space-between;font-size:9px;color:#94a3b8">
-  <span>CNAT v3.0 — MICROHELP © 2026</span>
+  <span>OceanWatch v3.0 — MICROHELP © 2026</span>
   <span>Documento generado automáticamente por ARIA</span>
   <span>CONFIDENCIAL — USO INTERNO</span>
 </div>
@@ -340,7 +340,7 @@ export default function ModuloARIA({ data }) {
           }}>A</div>
           <div style={{ flex: 1 }}>
             <div style={{ fontSize: 18, fontWeight: 700, color: '#fbbf24', fontFamily: "'Orbitron'" }}>ARIA</div>
-            <div style={{ fontSize: 11, color: '#a78bfa' }}>Asistente IA — CNAT v3.0</div>
+            <div style={{ fontSize: 11, color: '#a78bfa' }}>Asistente IA — OceanWatch v3.0</div>
           </div>
           {messages.length > 0 && (
             <>

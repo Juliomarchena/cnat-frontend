@@ -343,7 +343,7 @@ function PacificMapLeaflet({ earthquakes=[], buoys=[], focusedEqId=null, onClear
     const L = require('leaflet');
     const map = L.map(mapRef.current, { center:[-15,-60], zoom:3, minZoom:2, maxZoom:10, zoomControl:true, attributionControl:false });
     L.tileLayer(`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${process.env.REACT_APP_CARTO_KEY}`, { subdomains:'abcd', maxZoom:19 }).addTo(map);
-    L.control.attribution({ position:'bottomright', prefix:false }).addAttribution('CNAT - MICROHELP | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>').addTo(map);
+    L.control.attribution({ position:'bottomright', prefix:false }).addAttribution('OceanWatch - MICROHELP | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>').addTo(map);
     mapInstanceRef.current = map;
     return () => { if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current=null; } };
   }, []);
@@ -538,7 +538,7 @@ function TideGaugeMap() {
     const L   = require('leaflet');
     const map = L.map(mapRef.current, { center:[0,-150], zoom:3, minZoom:2, maxZoom:12, zoomControl:true, attributionControl:false });
     L.tileLayer(`https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png?key=${process.env.REACT_APP_CARTO_KEY}`, { subdomains:'abcd', maxZoom:19 }).addTo(map);
-    L.control.attribution({ position:'bottomright', prefix:false }).addAttribution('CNAT - MICROHELP | UNESCO/IOC SLSMF | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>').addTo(map);
+    L.control.attribution({ position:'bottomright', prefix:false }).addAttribution('OceanWatch - MICROHELP | UNESCO/IOC SLSMF | &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>').addTo(map);
     mapInstanceRef.current = map;
     return () => { if (mapInstanceRef.current) { mapInstanceRef.current.remove(); mapInstanceRef.current=null; } };
   }, [loadingStations]);
@@ -607,9 +607,9 @@ function TideGaugeMap() {
                          range:(Math.max(...vals)-Math.min(...vals)).toFixed(3), points:vals.length });
             }
           }
-        } catch(corsErr) { console.warn('[CNAT] IOC v1 CORS:', corsErr.message); }
+        } catch(corsErr) { console.warn('[OceanWatch] IOC v1 CORS:', corsErr.message); }
       }
-    } catch (e) { console.error('[CNAT] Error datos marea:', e); }
+    } catch (e) { console.error('[OceanWatch] Error datos marea:', e); }
     setLoadingTide(false);
   }, [hours]);
 
@@ -822,7 +822,7 @@ function VigiaResumenCRT({ summary, procesando = false }) {
               </>}
         </div>
         <div style={{ marginTop:10, paddingTop:8, borderTop:'1px solid #00ff0015', display:'flex', justifyContent:'space-between', fontSize:9, color:'#00ff0033' }}>
-          <span>CNAT::VIGÍA::v2.0 | Claude AI</span>
+          <span>OceanWatch::VIGÍA::v2.0 | Claude AI</span>
           <span>BBC MUNDO · NYT ESPAÑOL · WASHINGTON POST</span>
           <span>AUTO: 06:00 UTC DIARIO</span>
         </div>
@@ -930,7 +930,7 @@ function FuentesTab({ sr=[], data, session }) {
 
       {/* ── Cabecera con toggle IGP ── */}
       <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:14, flexWrap:'wrap', gap:10 }}>
-        <h3 style={{ fontSize:14, color:'#fbbf24', letterSpacing:2, margin:0 }}>FUENTES DE INFORMACIÓN — CNAT</h3>
+        <h3 style={{ fontSize:14, color:'#fbbf24', letterSpacing:2, margin:0 }}>FUENTES DE INFORMACIÓN — OceanWatch</h3>
         <div style={{ display:'flex', gap:10, alignItems:'center', flexWrap:'wrap' }}>
           <span style={{ fontSize:11, color:'#22c55e' }}>⚙️ <b>{counts.en_linea}</b></span>
           <span style={{ fontSize:11, color:'#f59e0b' }}>⏳ <b>{counts.en_espera}</b></span>
@@ -1024,9 +1024,9 @@ function LoginScreen({ onLogin }) {
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}@keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}`}</style>
       <div style={{ width:420, background:'#0a1628', border:'1px solid #1e3a5f', borderRadius:12, overflow:'hidden', boxShadow:'0 0 60px rgba(59,130,246,0.1)' }}>
         <div style={{ background:'linear-gradient(90deg,#0a1628,#0d2847,#0a1628)', borderBottom:'2px solid #f59e0b', padding:'24px 32px', textAlign:'center' }}>
-          <div style={{ width:56, height:56, borderRadius:10, background:'linear-gradient(135deg,#1e40af,#3b82f6)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:26, fontWeight:'bold', color:'#fff', margin:'0 auto 12px', boxShadow:'0 0 20px rgba(59,130,246,0.4)' }}>C</div>
-          <div style={{ fontFamily:"'Orbitron', monospace", fontSize:22, fontWeight:700, color:'#f59e0b', letterSpacing:4 }}>CNAT</div>
-          <div style={{ fontSize:10, color:'#fbbf24', letterSpacing:2, marginTop:4 }}>CENTRO NACIONAL DE ALERTA DE TSUNAMIS</div>
+          <img src="/oceanwatch-logo.png" alt="OceanWatch" style={{ height:72, display:'block', margin:'0 auto 12px', filter:'drop-shadow(0 0 14px rgba(59,130,246,0.5))' }} />
+          <div style={{ fontFamily:"'Orbitron', monospace", fontSize:22, fontWeight:700, color:'#f59e0b', letterSpacing:4 }}>OCEANWATCH</div>
+          <div style={{ fontSize:10, color:'#fbbf24', letterSpacing:2, marginTop:4 }}>ALERTA TEMPRANA DE TSUNAMIS</div>
           <div style={{ fontSize:9, color:'#475569', marginTop:6, letterSpacing:1 }}>DIRECCIÓN DE HIDROGRAFÍA Y NAVEGACIÓN — MGP</div>
         </div>
         <form onSubmit={handleLogin} style={{ padding:32 }}>
@@ -1047,7 +1047,7 @@ function LoginScreen({ onLogin }) {
           </div>
         </form>
         <div style={{ borderTop:'1px solid #1e3a5f22', padding:'10px 32px', display:'flex', justifyContent:'space-between' }}>
-          <span style={{ fontSize:8, color:'#334155' }}>CNAT v3.0</span>
+          <span style={{ fontSize:8, color:'#334155' }}>OceanWatch v3.0</span>
           <span style={{ fontSize:8, color:'#334155' }}>MICROHELP © 2026</span>
         </div>
       </div>
@@ -1229,10 +1229,10 @@ export default function App() {
       {/* ── HEADER ── */}
       <header style={{ background:'linear-gradient(90deg,#0a1628,#0d2847,#0a1628)', borderBottom:'2px solid #f59e0b', padding:'12px 20px', display:'flex', alignItems:'center', justifyContent:'space-between' }}>
         <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-          <div style={{ width:46, height:46, borderRadius:8, background:'linear-gradient(135deg,#1e40af,#3b82f6)', display:'flex', alignItems:'center', justifyContent:'center', fontSize:22, fontWeight:'bold', color:'#fff', boxShadow:'0 0 20px rgba(59,130,246,0.3)' }}>C</div>
+          <img src="/oceanwatch-logo.png" alt="OceanWatch" style={{ height:54, display:'block', filter:'drop-shadow(0 0 10px rgba(59,130,246,0.4))' }} />
           <div>
-            <h1 style={{ fontFamily:"'Orbitron'", fontSize:20, fontWeight:700, letterSpacing:3, color:'#f59e0b', margin:0 }}>CNAT</h1>
-            <p style={{ fontSize:10, color:'#fbbf24', letterSpacing:1.5, margin:0 }}>CENTRO NACIONAL DE ALERTA DE TSUNAMIS</p>
+            <h1 style={{ fontFamily:"'Orbitron'", fontSize:20, fontWeight:700, letterSpacing:3, color:'#f59e0b', margin:0 }}>OCEANWATCH</h1>
+            <p style={{ fontSize:10, color:'#fbbf24', letterSpacing:1.5, margin:0 }}>ALERTA TEMPRANA DE TSUNAMIS</p>
           </div>
           <div style={{ padding:'6px 14px', borderRadius:4, background:isA?'#7f1d1d':'#0f2a1a', border:`2px solid ${isA?'#ef4444':'#22c55e'}`, display:'flex', alignItems:'center', gap:6 }}>
             <div style={{ width:10, height:10, borderRadius:'50%', background:isA?'#ef4444':'#22c55e' }}/>

@@ -1,5 +1,5 @@
-// ARIA - Asistente IA del CNAT (Centro Nacional de Alerta de Tsunamis)
-// Marina de Guerra del Perú — Edge Function (proxy seguro)
+// ARIA - Asistente IA de OceanWatch
+// Edge Function (proxy seguro)
 // MICROHELP © 2026
 //
 // Esta función recibe el system prompt y los mensajes desde el frontend,

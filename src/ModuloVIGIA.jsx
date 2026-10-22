@@ -2,12 +2,12 @@ import React, { useState, useCallback } from 'react';
 import { supabase } from './supabaseClient';
 
 /**
- * VIGIA - Asistente IA del CNAT
- * Marina de Guerra del Perú
+ * VIGIA - Asistente IA del OceanWatch
+ * MICROHELP
  *
  * A diferencia del ARIA original, VIGIA llama a la Edge Function
  * "vigia" de Supabase, que tiene acceso directo a la tabla
- * earthquakes y otras tablas del CNAT.
+ * earthquakes y otras tablas del OceanWatch.
  */
 export default function ModuloVIGIA({ data }) {
   const [messages, setMessages] = useState([]);
@@ -79,21 +79,21 @@ export default function ModuloVIGIA({ data }) {
     const content = messages.map(m => `
       <div style="margin-bottom:20px;padding:14px;border-left:4px solid ${m.role === 'user' ? '#f59e0b' : '#06b6d4'};background:${m.role === 'user' ? '#fff8e7' : '#ecfeff'}">
         <div style="font-size:11px;font-weight:700;color:${m.role === 'user' ? '#92400e' : '#0e7490'};margin-bottom:8px;letter-spacing:1px">
-          ${m.role === 'user' ? 'OPERADOR' : 'VIGIA — Asistente IA CNAT'}
+          ${m.role === 'user' ? 'OPERADOR' : 'VIGIA — Asistente IA OceanWatch'}
         </div>
         <div style="font-size:13px;color:#1e293b;line-height:1.8;white-space:pre-wrap">${m.content}</div>
       </div>
     `).join('');
 
     const html = `<!DOCTYPE html>
-<html><head><meta charset="UTF-8"><title>Reporte VIGIA - CNAT ${now}</title>
+<html><head><meta charset="UTF-8"><title>Reporte VIGIA - OceanWatch ${now}</title>
 <style>body{font-family:'Courier New',monospace;margin:0;padding:0;color:#1e293b}@media print{.no-print{display:none}}</style>
 </head><body>
 <div style="background:#0a1628;padding:24px 32px;color:#fff">
   <div style="display:flex;align-items:center;gap:16px">
-    <div style="font-size:28px;font-weight:900;color:#f59e0b;letter-spacing:4px">CNAT</div>
+    <div style="font-size:28px;font-weight:900;color:#f59e0b;letter-spacing:4px">OCEANWATCH</div>
     <div>
-      <div style="font-size:11px;color:#94a3b8;letter-spacing:2px">CENTRO NACIONAL DE ALERTA DE TSUNAMIS</div>
+      <div style="font-size:11px;color:#94a3b8;letter-spacing:2px">ALERTA TEMPRANA DE TSUNAMIS</div>
       <div style="font-size:9px;color:#475569;margin-top:2px">DIRECCIÓN DE HIDROGRAFÍA Y NAVEGACIÓN — MGP</div>
     </div>
     <div style="margin-left:auto;text-align:right">
@@ -110,7 +110,7 @@ export default function ModuloVIGIA({ data }) {
 </div>
 <div style="padding:24px 32px">${content || '<p style="color:#94a3b8;font-style:italic">Sin consultas registradas.</p>'}</div>
 <div style="border-top:1px solid #e2e8f0;padding:12px 32px;display:flex;justify-content:space-between;font-size:9px;color:#94a3b8">
-  <span>CNAT v2.0</span>
+  <span>OceanWatch v2.0</span>
   <span>Documento generado automáticamente por VIGIA</span>
   <span>CONFIDENCIAL — USO INTERNO</span>
 </div>

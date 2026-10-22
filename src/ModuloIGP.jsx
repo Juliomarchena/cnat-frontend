@@ -1,6 +1,6 @@
 /**
  * ModuloIGP.jsx
- * CNAT - Centro Nacional de Alerta de Tsunamis
+ * OceanWatch - Alerta temprana de tsunamis
  * Módulo: Fuentes IGP — Comparativa Cruzada Multi-Canal
  * MICROHELP © 2026
  *
@@ -12,7 +12,7 @@
 
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 
-// ─── Constantes de estilo CNAT (CRT / operacional) ───────────────────────────
+// ─── Constantes de estilo OceanWatch (CRT / operacional) ───────────────────────────
 const C = {
   bg:        '#0a0f0a',
   panel:     '#0d140d',
@@ -601,7 +601,7 @@ export default function ModuloIGP({ apiBase, token }) {
         paddingTop: 10, display: 'flex', justifyContent: 'space-between',
         fontSize: 9, color: C.gray, letterSpacing: 1,
       }}>
-        <span>CNAT · MÓDULO IGP · MICROHELP © 2026</span>
+        <span>OceanWatch · MÓDULO IGP · MICROHELP © 2026</span>
         <span>AUTO-REFRESH: 30s · FILTERED STREAM: ACTIVO</span>
       </div>
 

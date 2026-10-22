@@ -1,8 +1,8 @@
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 
 /**
- * AutoReport.jsx — VIGÍA::ANÁLISIS  (el "piloto" del CNAT)
- * Marina de Guerra del Perú | MICROHELP © 2026
+ * AutoReport.jsx — VIGÍA::ANÁLISIS  (el "piloto" del OceanWatch)
+ * MICROHELP © 2026
  * v3.5 — Seguridad: la llamada a Claude pasa por la Edge Function "aria"
  *        (la API key ya NO vive en el navegador; eliminado REACT_APP_CLAUDE_KEY).
  *        Rol interpretativo: NO relista sismos (de eso se encarga el FEED).
@@ -81,7 +81,7 @@ function buildPrompt(data) {
     ? tsunamiSospechosos.map(fmtLinea).join('\n')
     : 'Ninguno: no hay sismos M6.5+ someros en el periodo.';
 
-  return `Eres VIGÍA, el analista de guardia del CNAT (Marina de Guerra del Perú).
+  return `Eres VIGÍA, el analista de guardia de OceanWatch.
 
 TU ROL: NO listar sismos —de eso se encarga el panel FEED SÍSMICO—. Tu trabajo es
 INTERPRETAR la situación a nivel nacional y decidir si algún sismo (cercano o lejano)
@@ -235,7 +235,7 @@ export default function AutoReport({ data }) {
 
         {/* Footer */}
         <div style={{ borderTop:'1px solid #00ff0015', marginTop:6, paddingTop:4, display:'flex', justifyContent:'space-between' }}>
-          <span style={{ fontSize:8, color:'#00ff0044', fontFamily:"'Courier New',monospace" }}>CNAT::VIGÍA::v3.5 | Auto:5min</span>
+          <span style={{ fontSize:8, color:'#00ff0044', fontFamily:"'Courier New',monospace" }}>OceanWatch::VIGÍA::v3.5 | Auto:5min</span>
           <span style={{ fontSize:8, color:'#00ff0044', fontFamily:"'Courier New',monospace" }}>Claude AI</span>
         </div>
       </div>

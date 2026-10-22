@@ -6,7 +6,7 @@ import React, { useState, useMemo } from 'react';
    Recibe del padre (App.js): earthquakes, alerts, kpis
    
    FASE 3.2 - 20/05/2026
-   MICROHELP para DHN - Marina de Guerra del Perú
+   MICROHELP
    ════════════════════════════════════════════════════════════ */
 
 const DHN_COLORS = {
@@ -103,7 +103,7 @@ function EarthquakeModal({ eq, onClose }) {
         {/* Título */}
         <div style={{ marginBottom: 16, paddingTop: 8 }}>
           <div style={{ fontSize: 11, color: '#64748b', letterSpacing: 2, marginBottom: 4 }}>
-            REPORTE OFICIAL DHN
+            REPORTE · MATRIZ DHN
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{

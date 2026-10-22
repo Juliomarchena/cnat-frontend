@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 /**
  * PanelIGP.jsx
  * Panel de tweets sísmicos del IGP/CENSIS
- * Marina de Guerra del Perú | MICROHELP © 2026
+ * MICROHELP © 2026
  *
  * - Muestra últimos tweets del IGP con efecto blink
  * - Ventana emergente (popup) cuando llega tweet nuevo

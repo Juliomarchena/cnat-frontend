@@ -1,5 +1,5 @@
-// VIGIA - Asistente del Centro Nacional de Alerta de Tsunamis (CNAT)
-// Marina de Guerra del Perú — Edge Function v3
+// VIGIA - Asistente de OceanWatch
+// Edge Function v3
 // MICROHELP © 2026
 //
 // v3: Prompt jerárquico — sismos locales/cercanos al Perú en PRIMERA PLANA
@@ -62,7 +62,7 @@ serve(async (req) => {
     const tools = [
       {
         name: "consultar_sismos",
-        description: `Consulta sismos en la base de datos del CNAT.
+        description: `Consulta sismos en la base de datos del OceanWatch.
 USA SIEMPRE esta herramienta antes de responder cualquier pregunta sobre sismos.
 IMPORTANTE sobre el campo solo_locales_peru:
 - Si el usuario menciona "Perú", "Peru", "peruano", "local", "territorio peruano" → pon solo_locales_peru=true
@@ -81,7 +81,7 @@ IMPORTANTE sobre el campo solo_locales_peru:
       },
     ];
 
-    const systemPrompt = `Eres VIGÍA, asistente operacional del CNAT (Centro Nacional de Alerta de Tsunamis) de la Marina de Guerra del Perú.
+    const systemPrompt = `Eres VIGÍA, asistente operacional de OceanWatch, sistema de alerta temprana de tsunamis.
 
 ════════════════════════════════════════════
 REGLA FUNDAMENTAL DE JERARQUÍA — LEE ESTO PRIMERO
