@@ -38,6 +38,24 @@ const directionalRadiusFactor=(b,s,r=90)=>{
 };
 const greensLaw=(h,dd=4000,cd=50)=>h*Math.pow(dd/cd,0.25);
 const initWaveH=(m)=>m<6.5?0:Math.max(0.1,Math.pow(10,0.5*m-3.5));
+// Altura v1 (línea base de la tesis): 10^(0.5M-3.5) en mar abierto, sin decaimiento con la distancia.
+// Sobreestima: Tohoku 2011 daba ~22 m en Callao frente a ~1-2 m observados. Se conserva solo para comparar.
+// Altura v2: fuente por leyes de escala de subducción (Strasser et al. 2010), dispersión
+// geométrica esférica en mar abierto y ley de Green hasta la profundidad costera.
+// Los coeficientes están sin calibrar contra mareógrafos: ver validación pendiente.
+const MU=3.0e10;
+const sourceScale=(m,dipDeg=20)=>{
+  const L=Math.pow(10,-2.412+0.583*m),W=Math.pow(10,-0.880+0.366*m);
+  const slip=Math.pow(10,1.5*m+9.05)/(MU*L*1e3*W*1e3);
+  return{L,W,slip,a0:slip*Math.sin(dipDeg*D2R)};
+};
+const deepAmplitude=(m,distKm,dipDeg=20)=>{
+  if(m<6.5)return 0;
+  const s=sourceScale(m,dipDeg);
+  const r0=Math.sin((s.L/2)/ER),dl=Math.sin(Math.min(distKm,ER*Math.PI/2)/ER);
+  const spread=dl>r0?Math.sqrt(r0/dl):1;
+  return s.a0*spread;
+};
 const waveFrontRadiusKm=(eh)=>waveSpeedKmh(OD)*eh;
 const hasWaveArrived=(epi,tgt,eh,fp)=>{
   const d=haversineKm(epi.lat,epi.lon,tgt.lat,tgt.lon);
@@ -109,10 +127,11 @@ const calcETAs=(event)=>{
     const df=directionalRadiusFactor(b,fp.strike,fp.rake);
     const spd=waveSpeedKmh(OD)*(0.95+0.05*df);
     const etaHrs=d/spd;
-    const coastH=greensLaw(ih*rf,4000,port.coastDepth);
+    const coastH=greensLaw(deepAmplitude(event.magnitude,d,fp.dip)*rf,OD,port.coastDepth);
+    const coastHLegacy=greensLaw(ih*rf,4000,port.coastDepth);
     const alert=classifyAlert(coastH);
     return{...port,distKm:Math.round(d),bearing:Math.round(b),etaHrs,etaFmt:fmtHrs(etaHrs),
-      coastHeight:coastH.toFixed(2),radiationFactor:rf.toFixed(2),dirRadFactor:df,alert};
+      coastHeight:coastH.toFixed(2),coastHeightLegacy:coastHLegacy.toFixed(2),radiationFactor:rf.toFixed(2),dirRadFactor:df,alert};
   });
 };
 
